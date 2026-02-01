@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Canya</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+    <style>
+        .admin-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-sidebar {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+            border: 1px solid var(--border);
+        }
+
+        .admin-sidebar h3 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0;
+        }
+
+        .sidebar-nav button {
+            background: none;
+            border: 2px solid transparent;
+            color: var(--text);
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            text-align: left;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .sidebar-nav button:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+            padding-left: calc(1rem - 2px);
+        }
+
+        .sidebar-nav button.active {
+            background-color: var(--primary);
+            color: white;
+            border-left: 3px solid var(--primary-dark);
+            padding-left: calc(1rem - 2px);
+        }
+
+        .admin-content {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .user-info {
+            text-align: right;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+
+        .user-info p {
+            margin: 0.25rem 0;
+            color: var(--text-light);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-sidebar {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                gap: 1rem;
+                position: static;
+                align-items: start;
+            }
+
+            .admin-sidebar h3 {
+                grid-column: 1 / -1;
+                margin-bottom: 0;
+            }
+
+            .sidebar-nav {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 0.5rem;
+            }
+
+            .sidebar-nav button {
+                width: 100%;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .modal-content {
+                width: 95%;
+            }
+        }
+
+        /* Clickable card styles */
+        .card[onclick] {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .card[onclick]:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+            border-color: var(--primary) !important;
+        }
+
+        .card[onclick]:active {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo"><img src="/images/canya-logo.svg" alt="Canya logo" class="site-logo"></a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="#" onclick="logout()" class="admin-link">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="admin-container">
+            <aside class="admin-sidebar">
+                <div class="user-info" id="user-info"></div>
+                <h3>Navigation</h3>
+                <nav class="sidebar-nav">
+                    <li><button class="nav-btn active" data-section="dashboard">📊 Dashboard</button></li>
+                    <li><button class="nav-btn" data-section="users">👥 Users</button></li>
+                    <li><button class="nav-btn" data-section="links">🔗 Links</button></li>
+                    <li><button class="nav-btn" data-section="services">🎯 Services</button></li>
+                    <li><button onclick="goToProfile()" style="margin-top: 1rem;">👤 My Profile</button></li>
+                </nav>
+            </aside>
+
+            <div class="admin-content">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="section active">
+                    <h2>Dashboard</h2>
+                    <p>Welcome to the Canya Admin Dashboard. Use the menu to manage users, links, and services.</p>
+                    <div class="grid" style="margin-top: 2rem;">
+                        <button class="card" onclick="navigateToSection('users')" style="background: none; border: none; cursor: pointer; padding: 0;">
+                            <div class="card-icon">👥</div>
+                            <h3 id="user-count">0</h3>
+                            <p>Total Users</p>
+                        </button>
+                        <button class="card" onclick="navigateToSection('links')" style="background: none; border: none; cursor: pointer; padding: 0;">
+                            <div class="card-icon">🔗</div>
+                            <h3 id="link-count">0</h3>
+                            <p>Total Links</p>
+                        </button>
+                        <button class="card" onclick="navigateToSection('services')" style="background: none; border: none; cursor: pointer; padding: 0;">
+                            <div class="card-icon">🎯</div>
+                            <h3 id="service-count">0</h3>
+                            <p>Total Services</p>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Users Section -->
+                <section id="users" class="section">
+                    <div class="section-header">
+                        <h2>User Management</h2>
+                        <button class="btn" onclick="openUserModal()">➕ Add User</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table"></tbody>
+                    </table>
+                </section>
+
+                <!-- Links Section -->
+                <section id="links" class="section">
+                    <div class="section-header">
+                        <h2>Link Management</h2>
+                        <button class="btn" onclick="openLinkModal()">➕ Add Link</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>URL</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="links-table"></tbody>
+                    </table>
+                </section>
+
+                <!-- Services Section -->
+                <section id="services" class="section">
+                    <div class="section-header">
+                        <h2>Service Management</h2>
+                        <button class="btn" onclick="openServiceModal()">➕ Add Service</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Icon</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="services-table"></tbody>
+                    </table>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- User Modal -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="user-modal-title">Add User</h2>
+                <button class="close-modal" onclick="closeUserModal()">✕</button>
+            </div>
+            <form id="user-form">
+                <div class="form-group">
+                    <label for="user-email">Email</label>
+                    <input type="email" id="user-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="user-password">Password</label>
+                    <input type="password" id="user-password" placeholder="Leave empty to keep current">
+                </div>
+                <div class="form-group">
+                    <label for="user-name">Name</label>
+                    <input type="text" id="user-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="user-role">Role</label>
+                    <select id="user-role">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-block">Save User</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Link Modal -->
+    <div id="link-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="link-modal-title">Add Link</h2>
+                <button class="close-modal" onclick="closeLinkModal()">✕</button>
+            </div>
+            <form id="link-form">
+                <div class="form-group">
+                    <label for="link-name">Link Name</label>
+                    <input type="text" id="link-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="link-url">URL</label>
+                    <input type="url" id="link-url" required>
+                </div>
+                <div class="form-group">
+                    <label for="link-description">Description</label>
+                    <textarea id="link-description" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-block">Save Link</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Service Modal -->
+    <div id="service-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="service-modal-title">Add Service</h2>
+                <button class="close-modal" onclick="closeServiceModal()">✕</button>
+            </div>
+            <form id="service-form">
+                <div class="form-group">
+                    <label for="service-name">Service Name</label>
+                    <input type="text" id="service-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="service-description">Description</label>
+                    <textarea id="service-description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="service-icon">Icon (Emoji)</label>
+                    <input type="text" id="service-icon" value="🔗" maxlength="2">
+                </div>
+                <button type="submit" class="btn btn-block">Save Service</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Canya</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo"><img src="/images/canya-logo.svg" alt="Canya logo" class="site-logo"></a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/services">Services</a></li>
+                <li><a href="/about">About Us</a></li>
+                <li><a href="/login" class="admin-link">Admin Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>About Canya</h1>
+            <p>Meet the team dedicated to building community connections</p>
+        </section>
+
+        <section class="container">
+            <h2>Our Story</h2>
+            <p>
+                Canya was founded on the belief that information is power. By creating a central hub for community 
+                resources, we empower individuals to find, connect with, and support organizations that align with 
+                their values.
+            </p>
+            <p>
+                Our team is passionate about making a difference and believes in the power of community action.
+            </p>
+        </section>
+
+        <section class="container">
+            <h2>Our Team</h2>
+            <div id="team-grid" class="grid"></div>
+        </section>
+
+        <section class="container">
+            <h2>Our Values</h2>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-icon">🤝</div>
+                    <h3>Community</h3>
+                    <p>We believe in the power of people coming together to create change</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">💡</div>
+                    <h3>Transparency</h3>
+                    <p>We operate with honesty and openness in everything we do</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎯</div>
+                    <h3>Impact</h3>
+                    <p>We measure success by the positive change we create</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Canya - Building Communities Together</p>
+    </footer>
+
+    <script>
+        // Load team members
+        fetch('/api/public/members')
+            .then(res => res.json())
+            .then(members => {
+                const container = document.getElementById('team-grid');
+                container.innerHTML = members.map(member => {
+                    // Use responsive srcset/sizes for the member avatar. Images are stored under /images/
+                    const avatarSrc = member.image || '/images/default-avatar.jpg';
+                    // Derive filenames for multiple sizes from the avatarSrc (expects -400/-800/-1600 variants)
+                    const base = avatarSrc.replace(/-800(\.[a-zA-Z]{3,4})$/, '');
+                    const extMatch = avatarSrc.match(/(\.[a-zA-Z]{3,4})$/);
+                    const ext = extMatch ? extMatch[1] : '.jpg';
+                    const src400 = base + '-400' + ext;
+                    const src800 = base + '-800' + ext;
+                    const src1600 = base + '-1600' + ext;
+                    const srcset = `${src400} 400w, ${src800} 800w, ${src1600} 1600w`;
+                    return `
+                    <div class="card member-card">
+                        <img src="${src800}" srcset="${srcset}" sizes="(max-width: 600px) 120px, 150px" alt="${member.name}" class="member-avatar">
+                        <h3>${member.name}</h3>
+                        <div class="member-role">${member.role}</div>
+                        <p class="member-bio">${member.bio}</p>
+                    </div>
+                `}).join('');
+            })
+            .catch(err => console.error('Error loading members:', err));
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1",
+    "name": "Greenpeace",
+    "url": "https://www.greenpeace.org",
+    "description": "Global environmental organization fighting climate change"
+  },
+  {
+    "id": "2",
+    "name": "Black Lives Matter",
+    "url": "https://blacklivesmatter.com",
+    "description": "Movement against police violence and systemic racism"
+  }
+]

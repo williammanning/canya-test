@@ -1,0 +1,9 @@
+[
+  {
+    "id": "1",
+    "email": "admin@canya.com",
+    "password": "$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS",
+    "name": "Administrator",
+    "role": "admin"
+  }
+]

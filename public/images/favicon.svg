@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="fTitle fDesc">
+  <title id="fTitle">Canya favicon</title>
+  <desc id="fDesc">Person-shaped Y icon in indigo circle</desc>
+  <rect width="64" height="64" rx="12" fill="#1f2937" />
+  <g transform="translate(32,12)" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <circle cx="0" cy="6" r="4" fill="#6366f1" stroke="none" />
+    <path d="M0,14 L-12,2" />
+    <path d="M0,14 L12,2" />
+    <path d="M0,14 L0,30" />
+  </g>
+</svg>

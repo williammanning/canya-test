@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services - Canya</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo"><img src="/images/canya-logo.svg" alt="Canya logo" class="site-logo"></a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/services">Services</a></li>
+                <li><a href="/about">About Us</a></li>
+                <li><a href="/login" class="admin-link">Admin Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Our Services</h1>
+            <p>Connect with organizations working to create positive change</p>
+        </section>
+
+        <section class="container">
+            <h2>Service Categories</h2>
+            <div id="services-grid" class="grid"></div>
+        </section>
+
+        <section class="container">
+            <h2>Featured Links & Resources</h2>
+            <div id="links-container"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Canya - Building Communities Together</p>
+    </footer>
+
+    <script>
+        // Load services
+        fetch('/api/public/services')
+            .then(res => res.json())
+            .then(services => {
+                const container = document.getElementById('services-grid');
+                container.innerHTML = services.map(service => `
+                    <div class="card">
+                        <div class="card-icon">${service.icon}</div>
+                        <h3>${service.name}</h3>
+                        <p>${service.description}</p>
+                    </div>
+                `).join('');
+            })
+            .catch(err => console.error('Error loading services:', err));
+
+        // Load links
+        fetch('/api/public/links')
+            .then(res => res.json())
+            .then(links => {
+                const container = document.getElementById('links-container');
+                container.innerHTML = '<div class="grid">' + links.map(link => `
+                    <div class="card">
+                        <h3>${link.name}</h3>
+                        <p>${link.description}</p>
+                        <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Visit ${link.name}</a>
+                    </div>
+                `).join('') + '</div>';
+            })
+            .catch(err => console.error('Error loading links:', err));
+    </script>
+</body>
+</html>
