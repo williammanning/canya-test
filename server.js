@@ -1,7 +1,28 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const path = require('path');
-const fs = require('fs');
+import express from 'express';
+import bodyParser from 'body-parser';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import authRoutes from './routes/auth.js';
+import apiRoutes from './routes/api.js';
+import publicRoutes from './routes/public.js';
+import dotenv from 'dotenv';
+import * as LaunchDarkly from '@launchdarkly/node-server-sdk';
+
+dotenv.config();
+const client = LaunchDarkly.init(process.env.LAUNCHDARKLY_SDK_KEY);
+
+client.once('ready', function () {
+  // For onboarding purposes only we flush events as soon as
+  // possible so we quickly detect your connection.
+  // You don't have to do this in practice because events are automatically flushed.
+  client.flush();
+  console.log('SDK successfully initialized!');
+});
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +37,7 @@ const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
+
 
 // Initialize data files if they don't exist
 const initializeDataFiles = () => {
@@ -101,13 +123,9 @@ const initializeDataFiles = () => {
 initializeDataFiles();
 
 // Routes
-const authRoutes = require('./routes/auth');
-const apiRoutes = require('./routes/api');
-const publicRoutes = require('./routes/public');
-
-app.use('/api/auth', authRoutes);
-app.use('/api', apiRoutes);
-app.use('/api/public', publicRoutes);
+app.use('/api/auth', authRoutes.default || authRoutes);
+app.use('/api', apiRoutes.default || apiRoutes);
+app.use('/api/public', publicRoutes.default || publicRoutes);
 
 // Serve HTML pages
 const pagesDir = path.join(__dirname, 'public', 'pages');
@@ -151,3 +169,4 @@ app.listen(PORT, () => {
   console.log(`Canya server is running on http://localhost:${PORT}`);
   console.log(`Admin login: admin@canya.com / admin123`);
 });
+
