@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { readData } = require('../middleware/db');
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { readData } from '../middleware/db.js';
 
 const SECRET_KEY = process.env.SECRET_KEY || 'canya_secret_key_2024';
 
@@ -44,4 +44,4 @@ router.post('/verify', (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

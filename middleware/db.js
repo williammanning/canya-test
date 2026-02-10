@@ -1,5 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const dataDir = path.join(__dirname, '../data');
 
@@ -8,7 +12,7 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const readData = (filename) => {
+export const readData = (filename) => {
   try {
     const filePath = path.join(dataDir, filename);
     if (fs.existsSync(filePath)) {
@@ -21,7 +25,7 @@ const readData = (filename) => {
   }
 };
 
-const writeData = (filename, data) => {
+export const writeData = (filename, data) => {
   try {
     const filePath = path.join(dataDir, filename);
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
@@ -31,5 +35,3 @@ const writeData = (filename, data) => {
     return false;
   }
 };
-
-module.exports = { readData, writeData };

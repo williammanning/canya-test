@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { readData } = require('../middleware/db');
+import { readData } from '../middleware/db.js';
 
 // Get all public services
 router.get('/services', (req, res) => {
@@ -20,4 +20,4 @@ router.get('/members', (req, res) => {
   res.json(members);
 });
 
-module.exports = router;
+export default router;

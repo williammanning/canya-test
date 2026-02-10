@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcryptjs');
-const { readData, writeData } = require('../middleware/db');
-const { verifyToken } = require('../middleware/auth');
+import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
+import { readData, writeData } from '../middleware/db.js';
+import { verifyToken } from '../middleware/auth.js';
 
 // User Management Routes
 router.get('/users', verifyToken, (req, res) => {
@@ -225,4 +225,4 @@ router.delete('/services/:id', verifyToken, (req, res) => {
   res.json({ message: 'Service deleted' });
 });
 
-module.exports = router;
+export default router;
