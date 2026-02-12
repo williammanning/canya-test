@@ -101,33 +101,6 @@ canya-test/
 - `GET /api/public/links` - Get all links
 - `GET /api/public/members` - Get team members
 
-## Design Features
-
-- **Modern UI**: Clean, contemporary design with smooth animations
-- **Friendly Colors**: Primary indigo with complementary greens and golds
-- **Responsive Grid**: Automatically adapts to different screen sizes
-- **Card-based Layout**: Organized content in easy-to-read cards
-- **Emoji Icons**: Friendly visual indicators for categories
-- **Mobile First**: Optimized for iPhone, iPad, and larger screens
-- **Accessible Forms**: Clear labels and helpful placeholders
-- **Professional Tables**: Organized data presentation with action buttons
-
-## Customization
-
-### Change the Site Title
-Edit the header navigation in HTML files to change "Canya" branding.
-
-### Modify Color Scheme
-Update CSS variables in `public/styles.css`:
-```css
-:root {
-  --primary: #6366f1;        /* Main brand color */
-  --secondary: #10b981;      /* Secondary color */
-  --accent: #f59e0b;         /* Accent color */
-  /* ... more colors */
-}
-```
-
 ### Add Team Members
 Edit `data/members.json` to add or modify team member profiles.
 
