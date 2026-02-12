@@ -1,9 +1,15 @@
-import { LDClient } from 'launchdarkly-js-client-sdk'
-import Observability, { LDObserve } from '@launchdarkly/observability'
-import SessionReplay, { LDRecord } from '@launchdarkly/session-replay'
+import { initialize } from 'https://cdn.jsdelivr.net/npm/launchdarkly-js-client-sdk@3.9.0/+esm';
+import Observability from 'https://cdn.jsdelivr.net/npm/@launchdarkly/observability@1.0.0/+esm';
+import SessionReplay from 'https://cdn.jsdelivr.net/npm/@launchdarkly/session-replay@1.0.0/+esm';
 
-const client = LDClient.initialize('6980ef02dc8a2b0a09c57945', {
-  // … your existing config, if relevant
+const clientSideID = '698a9d6da872e60a1a37c8fa';
+const context = {
+  kind: 'user',
+  key: 'user123',
+  name: 'Test User'
+};
+
+const ldclient = initialize(clientSideID, context, {
   plugins: [
     new Observability({
       networkRecording: {
@@ -12,8 +18,16 @@ const client = LDClient.initialize('6980ef02dc8a2b0a09c57945', {
       }
     }),
     new SessionReplay({
-      // Use 'none' to turn off session replay obfuscation. To learn more, read: https://launchdarkly.com/docs/sdk/features/session-replay-config#privacy
-      privacySetting: 'strict'
+      serviceName: 'ld-test'
     })
-  ],
+  ]
 });
+
+(async () => {
+  try {
+    await ldclient.waitForInitialization(4000);
+    console.log('SDK successfully initialized!');
+  } catch (error) {
+    console.error('Initialization failed', error);
+  }
+})();
