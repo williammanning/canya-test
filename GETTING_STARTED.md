@@ -1,7 +1,5 @@
 # Canya Application - Getting Started Guide
 
-## 🎉 Your Application is Ready!
-
 The Canya Node.js application has been successfully created and is running on `http://localhost:3000`.
 
 ## Quick Start
@@ -244,19 +242,6 @@ canya-test/
 2. Add initialization in `server.js`
 3. Create routes to manage it
 
-## Security Considerations
-
-### Production Checklist
-- [ ] Change the default admin password
-- [ ] Set the `SECRET_KEY` environment variable
-- [ ] Use HTTPS instead of HTTP
-- [ ] Add rate limiting to `/api/auth/login`
-- [ ] Consider moving to a real database (MongoDB, PostgreSQL)
-- [ ] Add CSRF protection
-- [ ] Implement proper user roles and permissions
-- [ ] Add input validation and sanitization
-- [ ] Consider adding two-factor authentication
-
 ### Environment Variables
 Create a `.env` file:
 ```
@@ -265,43 +250,3 @@ SECRET_KEY=your_very_secure_secret_key_here
 NODE_ENV=production
 ```
 
-## Troubleshooting
-
-### Server won't start
-- Make sure port 3000 is not in use
-- Check `npm install` completed successfully
-- Verify Node.js version (v12+)
-
-### Cannot login
-- Check credentials: admin@canya.com / admin123
-- Ensure JWT token is being stored in localStorage
-- Clear browser cache and try again
-
-### Data not persisting
-- Check that `/data/` directory exists
-- Verify file permissions on the data directory
-- Check server logs for errors
-
-### Styling issues on mobile
-- Make sure you're viewing with responsive design mode
-- Check that viewport meta tag is present
-- Test on actual devices for best results
-
-## Next Steps
-
-1. **Customize the branding**: Update logo, colors, and content
-2. **Add team members**: Edit `data/members.json`
-3. **Add service links**: Use the admin dashboard
-4. **Change the admin password**: Edit `data/users.json` or create new user
-5. **Deploy**: Consider deploying to Heroku, Vercel, or your own server
-6. **Migrate database**: Move to MongoDB or PostgreSQL for production
-
-## Support & Resources
-
-- **Node.js Documentation**: https://nodejs.org/docs/
-- **Express.js Guide**: https://expressjs.com/
-- **CSS Customization**: Study `public/styles.css` for design changes
-
----
-
-**Happy building with Canya! 🌍✨**
