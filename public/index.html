@@ -6,7 +6,7 @@
     <title>Canya - Community Services & Resources</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
-    <link rel="" href="./js/ld.js">
+    <script type="module" src="/js/ld.js"></script>
 </head>
 <body>
     <header>
@@ -69,11 +69,15 @@
             </div>
         </section>
 
-        <section class="container" id="featured-links-frame">
-            <h2>Featured Resources</h2>
-            <p>Check out some of the amazing organizations we're connected with:</p>
-            <div id="featured-links" class="grid"></div>
-        </section>
+        <!-- ld:featured-links-frame:start -->
+        <div data-ld-flag-key="featured-links-frame">
+            <section class="container" id="featured-links-frame">
+                <h2>Featured Resources</h2>
+                <p>Check out some of the amazing organizations we're connected with:</p>
+                <div id="featured-links" class="grid"></div>
+            </section>
+        </div>
+        <!-- ld:featured-links-frame:end -->
 
         <section class="container" id="contact">
             <h2>Get in Touch</h2>

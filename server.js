@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import authRoutes from './routes/auth.js';
@@ -9,6 +10,7 @@ import apiRoutes from './routes/api.js';
 import publicRoutes from './routes/public.js';
 import dotenv from 'dotenv';
 import * as LaunchDarkly from '@launchdarkly/node-server-sdk';
+
 
 dotenv.config();
 const client = LaunchDarkly.init(process.env.LAUNCHDARKLY_SDK_KEY);
@@ -21,11 +23,19 @@ client.once('ready', function () {
   console.log('SDK successfully initialized!');
 });
 
+client.on('initialized', () => {
+  // initialization succeeded, flag values are now available
+  const flagValue = client.variation('featured-links-frame', true);
+  // etc.
+});
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const FEATURED_LINKS_FLAG_KEY = 'featured-links-frame';
 
 // Middleware
 app.use(bodyParser.json());
@@ -129,9 +139,66 @@ app.use('/api/public', publicRoutes.default || publicRoutes);
 
 // Serve HTML pages
 const pagesDir = path.join(__dirname, 'public', 'pages');
+const indexPath = path.join(__dirname, 'public', 'index.html');
+let indexHtmlCache = null;
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+const stripFlaggedBlock = (html, flagKey) => {
+  const startMarker = `<!-- ld:${flagKey}:start -->`;
+  const endMarker = `<!-- ld:${flagKey}:end -->`;
+  const startIndex = html.indexOf(startMarker);
+  const endIndex = html.indexOf(endMarker);
+
+  if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+    return html.slice(0, startIndex) + html.slice(endIndex + endMarker.length);
+  }
+
+  const sectionRegex = new RegExp(`<section[^>]*id="${flagKey}"[\\s\\S]*?<\\/section>`, 'm');
+  return html.replace(sectionRegex, '');
+};
+
+const getOrSetUserKey = (req, res) => {
+  const cookieHeader = req.headers.cookie || '';
+  const cookies = cookieHeader.split(';').reduce((acc, part) => {
+    const [rawKey, ...rawValue] = part.trim().split('=');
+    if (!rawKey) {
+      return acc;
+    }
+    acc[rawKey] = decodeURIComponent(rawValue.join('='));
+    return acc;
+  }, {});
+
+  if (cookies.ld_user_key) {
+    return cookies.ld_user_key;
+  }
+
+  const userKey = crypto.randomUUID();
+  const cookieValue = `ld_user_key=${encodeURIComponent(userKey)}; Path=/; HttpOnly; SameSite=Lax`;
+  res.setHeader('Set-Cookie', cookieValue);
+  return userKey;
+};
+
+app.get('/', async (req, res, next) => {
+  try {
+    await client.waitForInitialization();
+    const userKey = getOrSetUserKey(req, res);
+    const user = { key: userKey, anonymous: true };
+    const showFeaturedLinks = await client.variation(
+      FEATURED_LINKS_FLAG_KEY,
+      user,
+      true
+    );
+    if (!indexHtmlCache) {
+      indexHtmlCache = fs.readFileSync(indexPath, 'utf8');
+    }
+    let html = indexHtmlCache;
+    if (!showFeaturedLinks) {
+      html = stripFlaggedBlock(html, FEATURED_LINKS_FLAG_KEY);
+    }
+    res.set('Content-Type', 'text/html');
+    res.send(html);
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get('/services', (req, res) => {
