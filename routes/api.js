@@ -225,4 +225,64 @@ router.delete('/services/:id', verifyToken, (req, res) => {
   res.json({ message: 'Service deleted' });
 });
 
+// Chatbot endpoint - proxy to Gemini API
+router.post('/chatbot', async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'Gemini API key not configured' });
+    }
+
+    const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
+
+    const requestBody = {
+      contents: [
+        {
+          role: 'user',
+          parts: [{
+            text: `You are a helpful assistant for Canya, a community services and resources platform. Help users with questions about community services, environmental conservation, social justice, and community development. Here's the user's question: ${message}`
+          }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      }
+    };
+
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      console.error('Gemini API error:', response.status, await response.text());
+      return res.status(500).json({ error: 'Failed to get response from AI' });
+    }
+
+    const data = await response.json();
+    
+    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+      const aiResponse = data.candidates[0].content.parts[0].text;
+      res.json({ response: aiResponse });
+    } else {
+      res.status(500).json({ error: 'Unexpected response format from AI' });
+    }
+  } catch (error) {
+    console.error('Chatbot error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

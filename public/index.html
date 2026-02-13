@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
     <script type="module" src="/js/ld.js"></script>
+    <script type="module" src="/js/chatbot.js"></script>
 </head>
 <body>
     <header>
@@ -78,6 +79,22 @@
             </section>
         </div>
         <!-- ld:featured-links-frame:end -->
+
+        <!-- ld:chatbot:start -->
+        <div data-ld-flag-key="enable-chatbot-for-help">
+            <section class="container" id="chatbot-section">
+                <h2>Get Answers to Help</h2>
+                <p>Have questions? Chat with our AI assistant powered by Gemini</p>
+                <div id="chatbot-container">
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="Ask a question..." />
+                        <button id="chat-send" class="btn">Send</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <!-- ld:chatbot:end -->
 
         <section class="container" id="contact">
             <h2>Get in Touch</h2>
