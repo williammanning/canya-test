@@ -13,6 +13,16 @@ function initChatbot() {
   // Add welcome message
   addMessage('assistant', 'Hello! I\'m here to help answer your questions about Canya services and resources. How can I assist you today?');
 
+  // Test AI Config connection
+  if (window.chatbotAIConfig) {
+    console.log('✅ Chatbot AI Config is active:', window.chatbotAIConfig);
+    // Optionally show config info in chat
+    const configInfo = `Using model: ${window.chatbotAIConfig.model} (Temperature: ${window.chatbotAIConfig.temperature})`;
+    console.log('🤖 ' + configInfo);
+  } else {
+    console.warn('⚠️ Chatbot AI Config not yet loaded, using defaults');
+  }
+
   // Handle send button click
   chatSend.addEventListener('click', handleSendMessage);
 
@@ -54,12 +64,32 @@ async function handleSendMessage() {
 }
 
 async function sendToServer(userMessage) {
+  // Get AI config from LaunchDarkly (set by ld.js)
+  const aiConfig = window.chatbotAIConfig || null;
+  
+  // Test: Log AI config being sent
+  console.log('📤 Sending message to server with AI config:', aiConfig);
+  
+  // Track chatbot usage in LaunchDarkly
+  if (window.ldclient) {
+    window.ldclient.track('chatbot-message-sent', {
+      messageLength: userMessage.length,
+      model: aiConfig?.model || 'default',
+      temperature: aiConfig?.temperature || 0.7,
+      configProvided: !!aiConfig
+    });
+    window.ldclient.flush();
+  }
+  
   const response = await fetch('/api/chatbot', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ message: userMessage })
+    body: JSON.stringify({ 
+      message: userMessage,
+      aiConfig: aiConfig
+    })
   });
 
   if (!response.ok) {
@@ -69,6 +99,14 @@ async function sendToServer(userMessage) {
   const data = await response.json();
   
   if (data.response) {
+    // Track successful response
+    if (window.ldclient) {
+      window.ldclient.track('chatbot-response-received', {
+        responseLength: data.response.length,
+        model: aiConfig?.model || 'default'
+      });
+      window.ldclient.flush();
+    }
     return data.response;
   } else {
     throw new Error('Unexpected response format from server');

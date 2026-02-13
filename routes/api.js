@@ -225,10 +225,10 @@ router.delete('/services/:id', verifyToken, (req, res) => {
   res.json({ message: 'Service deleted' });
 });
 
-// Chatbot endpoint - proxy to Gemini API
+// Chatbot endpoint - proxy to Gemini API with LaunchDarkly AI Config
 router.post('/chatbot', async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, aiConfig } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
@@ -239,22 +239,36 @@ router.post('/chatbot', async (req, res) => {
       return res.status(500).json({ error: 'Gemini API key not configured' });
     }
 
-    const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
+    // Use AI config from LaunchDarkly or defaults
+    const modelName = aiConfig?.model || 'gemini-3-flash-preview';
+    const temperature = aiConfig?.temperature || 0.7;
+    const maxTokens = aiConfig?.maxTokens || 1024;
+    const systemPrompt = aiConfig?.systemPrompt || 'You are a helpful assistant for Canya, a community services and resources platform. Help users with questions about community services, environmental conservation, social justice, and community development.';
+
+    // Test: Log AI config being used
+    console.log('🤖 Chatbot request received with AI Config:', {
+      model: modelName,
+      temperature: temperature,
+      maxTokens: maxTokens,
+      configProvided: !!aiConfig
+    });
+
+    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
 
     const requestBody = {
       contents: [
         {
           role: 'user',
           parts: [{
-            text: `You are a helpful assistant for Canya, a community services and resources platform. Help users with questions about community services, environmental conservation, social justice, and community development. Here's the user's question: ${message}`
+            text: `${systemPrompt}\n\nHere's the user's question: ${message}`
           }]
         }
       ],
       generationConfig: {
-        temperature: 0.7,
+        temperature: temperature,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 1024,
+        maxOutputTokens: maxTokens,
       }
     };
 
