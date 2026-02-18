@@ -8,6 +8,7 @@ A modern, friendly, and responsive web application for community building and se
 - **Home Page**: Information about Canya's mission with featured resources
 - **Services Page**: Browse and discover community service categories and external organizations
 - **About Us Page**: Meet the team members with profiles
+- **LaunchDarkly Status Page**: Real-time monitoring of feature flags, AI configs, and SDK connection
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 
 ### Admin Backend
@@ -19,7 +20,11 @@ A modern, friendly, and responsive web application for community building and se
 ### Feature Flags (LaunchDarkly)
 - **Featured Resources Toggle**: Control visibility of the featured links section
 - **AI Chatbot Toggle**: Enable/disable the Gemini-powered help chatbot
+- **AI Config Management**: JSON-based configurations for chatbot model settings
 - **Real-time Updates**: Feature flag changes reflect immediately without page reload
+- **Status Dashboard**: Dedicated page showing connection status, all flags, AI configs, and observability features
+- **Event Tracking**: Monitor custom events and flag changes in real-time
+- **Observability Plugins**: Network recording and session replay enabled
 
 ### AI Chatbot (Gemini 2.0 Flash)
 - **Intelligent Assistance**: AI-powered chatbot to help users with questions
@@ -74,11 +79,27 @@ A modern, friendly, and responsive web application for community building and se
    - Open your browser and navigate to `http://localhost:3000`
    - Admin login: `http://localhost:3000/login`
    - Default credentials: `admin@canya.com` / `admin123`
+   - LaunchDarkly Status: `http://localhost:3000/launchdarkly`
 
 5. **Configure Feature Flags**
-   In your LaunchDarkly dashboard, create the following boolean flags:
+   In your LaunchDarkly dashboard, create the following flags:
+   
+   **Boolean Flags:**
    - `featured-resources` - Controls the Featured Resources section visibility
    - `enable-chatbot-for-help` - Controls the AI Chatbot visibility
+   - `featured-links-frame` - Controls featured links frame display
+   
+   **JSON Flags:**
+   - `canya-chatbot-assistant` - AI configuration object with:
+     ```json
+     {
+       "enabled": true,
+       "model": "gemini-2-flash-preview",
+       "temperature": 0.7,
+       "maxTokens": 1024,
+       "systemPrompt": "Your custom prompt here"
+     }
+     ```
 
 ## Project Structure
 
@@ -91,12 +112,14 @@ canya-test/
 │   ├── js/
 │   │   ├── admin.js       # Admin dashboard JavaScript
 │   │   ├── ld.js          # LaunchDarkly client initialization
+│   │   ├── ld-status.js   # LaunchDarkly status page logic
 │   │   └── chatbot.js     # Gemini AI chatbot integration
 │   └── pages/
-│       ├── services.html  # Services page
-│       ├── about.html     # About us page
-│       ├── login.html     # Login page
-│       └── admin.html     # Admin dashboard
+│       ├── services.html     # Services page
+│       ├── about.html        # About us page
+│       ├── login.html        # Login page
+│       ├── admin.html        # Admin dashboard
+│       └── launchdarkly.html # LaunchDarkly status & monitoring
 ├── data/                   # File-based database
 │   ├── users.json         # User accounts
 │   ├── links.json         # External service links
