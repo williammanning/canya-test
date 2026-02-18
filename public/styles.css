@@ -5,18 +5,59 @@
 }
 
 :root {
+  /* Dark theme (default) */
   --primary: #ffffff;
   --primary-dark: #e0e0e0;
   --secondary: #888888;
   --accent: #ffffff;
   --text: #ffffff;
   --text-light: #b0b0b0;
+  --text-secondary: #cccccc;
   --bg: #000000;
   --bg-light: #0a0a0a;
-  --bg-card: #111111;
+  --bg-card: rgba(17, 17, 17, 0.7);
+  --bg-card-hover: rgba(17, 17, 17, 0.75);
+  --bg-card-solid: rgba(17, 17, 17, 0.6);
   --border: #333333;
-  --success: #ffffff;
-  --error: #ffffff;
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.3);
+  --success: #4caf50;
+  --error: #f44336;
+  --header-bg: rgba(0, 0, 0, 0.8);
+  --shadow: rgba(0, 0, 0, 0.37);
+  --shadow-hover: rgba(255, 255, 255, 0.15);
+  --btn-primary-bg: #ffffff;
+  --btn-primary-text: #000000;
+  --btn-primary-hover-bg: #000000;
+  --btn-primary-hover-text: #ffffff;
+}
+
+[data-theme="light"] {
+  /* Light theme */
+  --primary: #000000;
+  --primary-dark: #333333;
+  --secondary: #666666;
+  --accent: #007bff;
+  --text: #212529;
+  --text-light: #6c757d;
+  --text-secondary: #495057;
+  --bg: #ffffff;
+  --bg-light: #f8f9fa;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+  --bg-card-solid: rgba(248, 249, 250, 0.9);
+  --border: #dee2e6;
+  --border-light: rgba(0, 0, 0, 0.1);
+  --border-hover: rgba(0, 0, 0, 0.3);
+  --success: #28a745;
+  --error: #dc3545;
+  --header-bg: rgba(255, 255, 255, 0.95);
+  --shadow: rgba(0, 0, 0, 0.1);
+  --shadow-hover: rgba(0, 0, 0, 0.2);
+  --btn-primary-bg: #007bff;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover-bg: #0056b3;
+  --btn-primary-hover-text: #ffffff;
 }
 
 body {
@@ -25,18 +66,20 @@ body {
   background-color: var(--bg);
   line-height: 1.6;
   letter-spacing: 0.02em;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 header {
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--header-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  color: white;
+  color: var(--text);
   padding: 1rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-light);
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 nav {
@@ -52,10 +95,11 @@ nav {
   font-size: 1.8rem;
   font-weight: bold;
   text-decoration: none;
-  color: white;
+  color: var(--text);
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  transition: color 0.3s ease;
 }
 
 /* Logo image sizing */
@@ -77,23 +121,25 @@ nav {
 
 .header-tagline {
   font-size: 0.9rem;
-  color: white;
+  color: var(--text-light);
   margin: 0;
   flex: 1;
   margin-left: 2rem;
   opacity: 0.9;
+  transition: color 0.3s ease;
 }
 
 .nav-links {
   display: flex;
   list-style: none;
   gap: 2rem;
+  align-items: center;
 }
 
 .nav-links a {
-  color: white;
+  color: var(--text);
   text-decoration: none;
-  transition: opacity 0.3s;
+  transition: opacity 0.3s, color 0.3s ease;
   font-weight: 500;
 }
 
@@ -102,16 +148,43 @@ nav {
 }
 
 .nav-links .admin-link {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   transition: all 0.3s;
 }
 
 .nav-links .admin-link:hover {
-  background-color: #e0e0e0;
+  background-color: var(--btn-primary-hover-bg);
+  color: var(--btn-primary-hover-text);
   transform: translateY(-2px);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  background: none;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  color: var(--text);
+  padding: 0;
+}
+
+.theme-toggle:hover {
+  border-color: var(--text);
+  transform: rotate(15deg) scale(1.1);
+}
+
+.theme-toggle:active {
+  transform: rotate(15deg) scale(0.95);
 }
 
 main {
@@ -122,14 +195,15 @@ main {
 }
 
 .container {
-  background-color: rgba(17, 17, 17, 0.7);
+  background-color: var(--bg-card);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-light);
   border-radius: 0.5rem;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: 0 8px 32px 0 var(--shadow);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .hero {
@@ -219,21 +293,21 @@ h3 {
 }
 
 .card {
-  background-color: rgba(17, 17, 17, 0.6);
+  background-color: var(--bg-card-solid);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border-light);
   border-radius: 0.25rem;
   padding: 1.5rem;
   transition: all 0.3s;
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px 0 var(--shadow);
 }
 
 .card:hover {
   transform: translateY(-3px);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(255, 255, 255, 0.15);
-  background-color: rgba(17, 17, 17, 0.75);
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 32px var(--shadow-hover);
+  background-color: var(--bg-card-hover);
 }
 
 .card-icon {
@@ -253,9 +327,9 @@ h3 {
 .btn {
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  background-color: #ffffff;
-  color: #000000;
-  border: 1px solid #ffffff;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 1px solid var(--btn-primary-bg);
   border-radius: 0.25rem;
   cursor: pointer;
   text-decoration: none;
@@ -268,8 +342,9 @@ h3 {
 }
 
 .btn:hover {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: var(--btn-primary-hover-bg);
+  color: var(--btn-primary-hover-text);
+  border-color: var(--btn-primary-hover-bg);
   transform: translateY(-2px);
 }
 
@@ -279,13 +354,13 @@ h3 {
 
 .btn-secondary {
   background-color: transparent;
-  border-color: #ffffff;
-  color: #ffffff;
+  border-color: var(--text);
+  color: var(--text);
 }
 
 .btn-secondary:hover {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: var(--text);
+  color: var(--bg);
 }
 
 .btn-danger {
@@ -327,12 +402,12 @@ textarea,
 select {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-light);
   border-radius: 0.25rem;
   font-family: inherit;
   font-size: 1rem;
   transition: all 0.3s;
-  background-color: rgba(17, 17, 17, 0.6);
+  background-color: var(--bg-card-solid);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   color: var(--text);
@@ -342,9 +417,9 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
-  background-color: rgba(17, 17, 17, 0.8);
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 2px var(--border-light);
+  background-color: var(--bg-card-hover);
 }
 
 textarea {
@@ -359,12 +434,13 @@ textarea {
 }
 
 footer {
-  background-color: #000000;
+  background-color: var(--bg-light);
   border-top: 1px solid var(--border);
   padding: 2rem 1rem;
   text-align: center;
   color: var(--text-light);
   margin-top: 3rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .alert {
@@ -376,21 +452,21 @@ footer {
 }
 
 .alert-success {
-  background-color: rgba(26, 26, 26, 0.8);
-  color: #ffffff;
-  border: 1px solid rgba(0, 255, 0, 0.5);
+  background-color: var(--bg-card);
+  color: var(--success);
+  border: 1px solid var(--success);
 }
 
 .alert-error {
-  background-color: rgba(26, 26, 26, 0.8);
-  color: #ffffff;
-  border: 1px solid rgba(255, 0, 0, 0.5);
+  background-color: var(--bg-card);
+  color: var(--error);
+  border: 1px solid var(--error);
 }
 
 .alert-info {
-  background-color: rgba(26, 26, 26, 0.8);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background-color: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .loading {
@@ -414,22 +490,22 @@ footer {
 }
 
 .table thead {
-  background-color: rgba(17, 17, 17, 0.8);
+  background-color: var(--bg-card);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid var(--border);
 }
 
 .table th,
 .table td {
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-light);
   color: var(--text);
 }
 
 .table tbody tr:hover {
-  background-color: rgba(17, 17, 17, 0.6);
+  background-color: var(--bg-card-solid);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
 }
@@ -453,16 +529,18 @@ footer {
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 1rem;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--border);
+  transition: border-color 0.3s ease;
 }
 
 .member-role {
-  color: #ffffff;
+  color: var(--text-secondary);
   font-weight: 600;
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-size: 0.875rem;
+  transition: color 0.3s ease;
 }
 
 .member-bio {
@@ -575,27 +653,29 @@ footer {
 
 /* Chatbot Styles */
 #chatbot-container {
-  background-color: rgba(17, 17, 17, 0.7);
+  background-color: var(--bg-card);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-light);
   border-radius: 0.25rem;
   overflow: hidden;
   max-width: 800px;
   margin: 0 auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px var(--shadow);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .chat-messages {
   height: 400px;
   overflow-y: auto;
   padding: 1.5rem;
-  background-color: rgba(10, 10, 10, 0.5);
+  background-color: var(--bg-light);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  transition: background-color 0.3s ease;
 }
 
 .chat-message {
@@ -627,24 +707,25 @@ footer {
 .message-content {
   padding: 0.75rem 1rem;
   border-radius: 0.25rem;
-  background-color: rgba(17, 17, 17, 0.8);
+  background-color: var(--bg-card);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-light);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .chat-message.user .message-content {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--btn-primary-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  color: #000000;
-  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--btn-primary-text);
+  border-color: var(--btn-primary-bg);
 }
 
 .chat-message.assistant .message-content {
-  background-color: rgba(17, 17, 17, 0.8);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background-color: var(--bg-card);
+  border-color: var(--border-light);
+  color: var(--text);
 }
 
 .message-content strong {
@@ -663,31 +744,32 @@ footer {
   display: flex;
   gap: 0.5rem;
   padding: 1rem;
-  background-color: rgba(17, 17, 17, 0.8);
+  background-color: var(--bg-card);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-light);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 #chat-input {
   flex: 1;
   padding: 0.75rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-light);
   border-radius: 0.25rem;
   font-size: 1rem;
   font-family: inherit;
   outline: none;
   transition: all 0.2s;
-  background-color: rgba(10, 10, 10, 0.6);
+  background-color: var(--bg-light);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   color: var(--text);
 }
 
 #chat-input:focus {
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
-  background-color: rgba(10, 10, 10, 0.8);
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 2px var(--border-light);
+  background-color: var(--bg-card-hover);
 }
 
 #chat-send {

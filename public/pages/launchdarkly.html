@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaunchDarkly Status - Canya</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+    <script src="/js/theme.js"></script>
+    <style>
+        .ld-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .status-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px var(--shadow);
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+        }
+
+        .status-dot.connecting {
+            background: #ffc107;
+        }
+
+        .status-dot.error {
+            background: #dc3545;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .sdk-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .info-item {
+            padding: 12px;
+            background: var(--bg-light);
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: var(--text);
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+        }
+
+        .flags-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .flag-card {
+            background: var(--bg-light);
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 4px solid var(--accent);
+            transition: all 0.3s ease;
+        }
+
+        .flag-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .flag-key {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+        }
+
+        .flag-value {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .flag-value.boolean-true {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .flag-value.boolean-false {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .flag-value.string, .flag-value.number {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .flag-value.json {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .flag-details {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 4px;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+
+        .flag-type {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .flag-json {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: var(--text);
+        }
+
+        .no-flags {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-light);
+        }
+
+        .refresh-button {
+            background: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .refresh-button:hover {
+            background: var(--btn-primary-hover-bg);
+            color: var(--btn-primary-hover-text);
+        }
+
+        .refresh-button:disabled {
+            background: var(--secondary);
+            cursor: not-allowed;
+        }
+
+        h1 {
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .page-description {
+            color: var(--text-light);
+            margin-bottom: 32px;
+        }
+
+        .last-updated {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 8px;
+        }
+
+        .ai-config-card {
+            background: var(--bg-card);
+            border-left-color: var(--accent);
+        }
+
+        .observability-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .obs-item {
+            padding: 16px;
+            background: var(--bg-light);
+            border-radius: 6px;
+            border-left: 3px solid var(--success);
+            transition: all 0.3s ease;
+        }
+
+        .obs-item.disabled {
+            border-left-color: var(--secondary);
+            opacity: 0.6;
+        }
+
+        .obs-label {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .obs-status {
+            font-size: 12px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .obs-item.disabled .obs-status {
+            color: var(--secondary);
+        }
+
+        .event-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            padding: 12px;
+            background: var(--bg-light);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .event-name {
+            font-weight: 600;
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+        }
+
+        .event-time {
+            font-size: 11px;
+            color: var(--text-light);
+        }
+
+        .event-data {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+        }
+
+        .section-badge {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--bg);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+    </style>
+    <script type="module" src="/js/ld-status.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo"><img src="/images/canya-logo.svg" alt="Canya logo" class="site-logo"></a>
+            <p class="header-tagline">Connecting communities with resources and services for a better world</p>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/services">Services</a></li>
+                <li><a href="/about">About Us</a></li>
+                <li><button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">☀️</button></li>
+                <li><a href="#" onclick="checkUserLogin()" class="admin-link">Account</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="ld-container">
+        <h1>LaunchDarkly Status</h1>
+        <p class="page-description">Real-time connection status and feature flag information for this application</p>
+
+        <!-- Connection Status Card -->
+        <div class="status-card">
+            <div class="status-header">
+                <h2>Connection Status</h2>
+                <span class="status-indicator status-connecting" id="connection-status">
+                    <span class="status-dot connecting"></span>
+                    Connecting...
+                </span>
+            </div>
+            
+            <div class="sdk-info">
+                <div class="info-item">
+                    <div class="info-label">Client ID</div>
+                    <div class="info-value" id="client-id">Loading...</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">User Context</div>
+                    <div class="info-value" id="user-context">Loading...</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">SDK Version</div>
+                    <div class="info-value">3.9.0 (JS Client SDK)</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Environment</div>
+                    <div class="info-value">Production</div>
+                </div>
+            </div>
+            
+            <div class="last-updated" id="last-updated">Last updated: --</div>
+        </div>
+
+        <!-- AI Configs Card -->
+        <div class="status-card">
+            <div class="status-header">
+                <h2>AI Configs<span class="section-badge" id="ai-count">0</span></h2>
+                <button class="refresh-button" onclick="window.refreshFlags()">
+                    Refresh
+                </button>
+            </div>
+            
+            <div class="flags-grid" id="ai-configs-container">
+                <div class="no-flags">Loading AI configurations...</div>
+            </div>
+        </div>
+
+        <!-- Observability Status Card -->
+        <div class="status-card">
+            <div class="status-header">
+                <h2>Observability & Monitoring</h2>
+            </div>
+            
+            <div class="observability-grid">
+                <div class="obs-item" id="obs-network">
+                    <div class="obs-label">Network Recording</div>
+                    <div class="obs-status">Enabled</div>
+                </div>
+                <div class="obs-item" id="obs-session">
+                    <div class="obs-label">Session Replay</div>
+                    <div class="obs-status">Enabled</div>
+                </div>
+                <div class="obs-item" id="obs-headers">
+                    <div class="obs-label">Headers & Body</div>
+                    <div class="obs-status">Recording</div>
+                </div>
+                <div class="obs-item">
+                    <div class="obs-label">Service Name</div>
+                    <div class="obs-status" style="color: var(--text);">ld-test</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Experiments & Events Card -->
+        <div class="status-card">
+            <div class="status-header">
+                <h2>Recent Events<span class="section-badge" id="event-count">0</span></h2>
+                <button class="refresh-button" onclick="window.clearEvents()">
+                    Clear
+                </button>
+            </div>
+            
+            <div class="event-list" id="events-container">
+                <div class="no-flags">No events tracked yet. Events will appear here as they occur.</div>
+            </div>
+        </div>
+
+        <!-- Feature Flags Card -->
+        <div class="status-card">
+            <div class="status-header">
+                <h2>Feature Flags<span class="section-badge" id="flags-count">0</span></h2>
+                <button class="refresh-button" id="refresh-button" onclick="window.refreshFlags()">
+                    Refresh
+                </button>
+            </div>
+            
+            <div class="flags-grid" id="flags-container">
+                <div class="no-flags">Loading feature flags...</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Helper function for account link
+        function checkUserLogin() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+            window.location.href = isLoggedIn ? '/profile' : '/login';
+        }
+    </script>
+</body>
+</html>
