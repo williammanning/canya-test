@@ -6,6 +6,7 @@
     <title>About Us - Canya</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+    <script src="/js/theme.js"></script>
 </head>
 <body>
     <header>
@@ -15,6 +16,7 @@
                 <li><a href="/">Home</a></li>
                 <li><a href="/services">Services</a></li>
                 <li><a href="/about">About Us</a></li>
+                <li><button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">☀️</button></li>
                 <li><a href="/login" class="admin-link">Admin Login</a></li>
             </ul>
         </nav>
@@ -67,8 +69,8 @@
         <section class="container">
             <h2>System Status</h2>
             <p>
-                View our <a href="/launchdarkly" style="color: #007bff; text-decoration: underline;">LaunchDarkly Status Page</a> 
-                to see real-time feature flag information and SDK connection status.
+                View our <a href="/launchdarkly" style="color: var(--accent); text-decoration: underline; font-weight: 600;">LaunchDarkly Status Page</a> 
+                to see real-time feature flag information, AI configurations, observability status, and SDK connection details.
             </p>
         </section>
     </main>

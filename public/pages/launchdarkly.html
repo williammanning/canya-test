@@ -6,6 +6,7 @@
     <title>LaunchDarkly Status - Canya</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+    <script src="/js/theme.js"></script>
     <style>
         .ld-container {
             max-width: 1200px;
@@ -14,11 +15,13 @@
         }
 
         .status-card {
-            background: white;
+            background: var(--bg-card);
             border-radius: 8px;
             padding: 24px;
             margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px var(--shadow);
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
         }
 
         .status-header {
@@ -86,13 +89,15 @@
 
         .info-item {
             padding: 12px;
-            background: #f8f9fa;
+            background: var(--bg-light);
             border-radius: 6px;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
         }
 
         .info-label {
             font-size: 12px;
-            color: #6c757d;
+            color: var(--text-light);
             font-weight: 600;
             text-transform: uppercase;
             margin-bottom: 4px;
@@ -100,7 +105,7 @@
 
         .info-value {
             font-size: 14px;
-            color: #212529;
+            color: var(--text);
             word-break: break-all;
             font-family: 'Courier New', monospace;
         }
@@ -111,10 +116,11 @@
         }
 
         .flag-card {
-            background: #f8f9fa;
+            background: var(--bg-light);
             border-radius: 8px;
             padding: 16px;
-            border-left: 4px solid #007bff;
+            border-left: 4px solid var(--accent);
+            transition: all 0.3s ease;
         }
 
         .flag-header {
@@ -127,7 +133,7 @@
         .flag-key {
             font-weight: 600;
             font-size: 16px;
-            color: #212529;
+            color: var(--text);
             font-family: 'Courier New', monospace;
         }
 
@@ -154,20 +160,23 @@
         }
 
         .flag-value.json {
-            background: #e2e3e5;
-            color: #383d41;
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
         }
 
         .flag-details {
             margin-top: 12px;
             padding: 12px;
-            background: white;
+            background: var(--bg);
             border-radius: 4px;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
         }
 
         .flag-type {
             font-size: 12px;
-            color: #6c757d;
+            color: var(--text-light);
             margin-bottom: 8px;
         }
 
@@ -176,18 +185,18 @@
             font-size: 13px;
             white-space: pre-wrap;
             word-break: break-word;
-            color: #212529;
+            color: var(--text);
         }
 
         .no-flags {
             text-align: center;
             padding: 48px;
-            color: #6c757d;
+            color: var(--text-light);
         }
 
         .refresh-button {
-            background: #007bff;
-            color: white;
+            background: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
             border: none;
             padding: 8px 16px;
             border-radius: 4px;
@@ -197,33 +206,34 @@
         }
 
         .refresh-button:hover {
-            background: #0056b3;
+            background: var(--btn-primary-hover-bg);
+            color: var(--btn-primary-hover-text);
         }
 
         .refresh-button:disabled {
-            background: #6c757d;
+            background: var(--secondary);
             cursor: not-allowed;
         }
 
         h1 {
-            color: #212529;
+            color: var(--text);
             margin-bottom: 8px;
         }
 
         .page-description {
-            color: #6c757d;
+            color: var(--text-light);
             margin-bottom: 32px;
         }
 
         .last-updated {
             font-size: 12px;
-            color: #6c757d;
+            color: var(--text-light);
             margin-top: 8px;
         }
 
         .ai-config-card {
-            background: #e7f3ff;
-            border-left-color: #0066cc;
+            background: var(--bg-card);
+            border-left-color: var(--accent);
         }
 
         .observability-grid {
@@ -235,13 +245,14 @@
 
         .obs-item {
             padding: 16px;
-            background: #f8f9fa;
+            background: var(--bg-light);
             border-radius: 6px;
-            border-left: 3px solid #28a745;
+            border-left: 3px solid var(--success);
+            transition: all 0.3s ease;
         }
 
         .obs-item.disabled {
-            border-left-color: #6c757d;
+            border-left-color: var(--secondary);
             opacity: 0.6;
         }
 
@@ -249,17 +260,17 @@
             font-weight: 600;
             font-size: 14px;
             margin-bottom: 4px;
-            color: #212529;
+            color: var(--text);
         }
 
         .obs-status {
             font-size: 12px;
-            color: #28a745;
+            color: var(--success);
             font-weight: 600;
         }
 
         .obs-item.disabled .obs-status {
-            color: #6c757d;
+            color: var(--secondary);
         }
 
         .event-list {
@@ -269,10 +280,12 @@
 
         .event-item {
             padding: 12px;
-            background: #f8f9fa;
+            background: var(--bg-light);
             border-radius: 6px;
             margin-bottom: 8px;
             font-size: 13px;
+            border: 1px solid var(--border-light);
+            transition: all 0.3s ease;
         }
 
         .event-header {
@@ -284,26 +297,26 @@
 
         .event-name {
             font-weight: 600;
-            color: #212529;
+            color: var(--text);
             font-family: 'Courier New', monospace;
         }
 
         .event-time {
             font-size: 11px;
-            color: #6c757d;
+            color: var(--text-light);
         }
 
         .event-data {
             font-family: 'Courier New', monospace;
             font-size: 12px;
-            color: #495057;
+            color: var(--text-secondary);
             white-space: pre-wrap;
         }
 
         .section-badge {
             display: inline-block;
-            background: #007bff;
-            color: white;
+            background: var(--accent);
+            color: var(--bg);
             padding: 2px 8px;
             border-radius: 10px;
             font-size: 11px;
@@ -322,6 +335,7 @@
                 <li><a href="/">Home</a></li>
                 <li><a href="/services">Services</a></li>
                 <li><a href="/about">About Us</a></li>
+                <li><button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">☀️</button></li>
                 <li><a href="#" onclick="checkUserLogin()" class="admin-link">Account</a></li>
             </ul>
         </nav>
@@ -398,7 +412,7 @@
                 </div>
                 <div class="obs-item">
                     <div class="obs-label">Service Name</div>
-                    <div class="obs-status" style="color: #212529;">ld-test</div>
+                    <div class="obs-status" style="color: var(--text);">ld-test</div>
                 </div>
             </div>
         </div>
