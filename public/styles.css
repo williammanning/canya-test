@@ -15,9 +15,9 @@
   --text-secondary: #cccccc;
   --bg: #000000;
   --bg-light: #0a0a0a;
-  --bg-card: rgba(17, 17, 17, 0.7);
-  --bg-card-hover: rgba(17, 17, 17, 0.75);
-  --bg-card-solid: rgba(17, 17, 17, 0.6);
+  --bg-card: rgba(17, 17, 17, 0.3);
+  --bg-card-hover: rgba(17, 17, 17, 0.4);
+  --bg-card-solid: rgba(17, 17, 17, 0.2);
   --border: #333333;
   --border-light: rgba(255, 255, 255, 0.1);
   --border-hover: rgba(255, 255, 255, 0.3);
@@ -43,9 +43,9 @@
   --text-secondary: #495057;
   --bg: #ffffff;
   --bg-light: #f8f9fa;
-  --bg-card: rgba(255, 255, 255, 0.9);
-  --bg-card-hover: rgba(255, 255, 255, 0.95);
-  --bg-card-solid: rgba(248, 249, 250, 0.9);
+  --bg-card: rgba(255, 255, 255, 0.7);
+  --bg-card-hover: rgba(255, 255, 255, 0.8);
+  --bg-card-solid: rgba(248, 249, 250, 0.7);
   --border: #dee2e6;
   --border-light: rgba(0, 0, 0, 0.1);
   --border-hover: rgba(0, 0, 0, 0.3);

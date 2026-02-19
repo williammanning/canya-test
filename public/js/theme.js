@@ -63,6 +63,8 @@
         const button = document.getElementById('theme-toggle');
         if (button) {
             button.addEventListener('click', toggleTheme);
+            // Update button icon on setup
+            updateThemeButton(getSavedTheme());
         }
     }
     
