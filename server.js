@@ -55,9 +55,30 @@ const initializeDataFiles = () => {
     {
       id: '1',
       email: 'admin@canya.com',
-      password: '$2a$10$eImiTXuWVxfaHNYY0iNAUOYky9RCLY/8eDK5lqzkB.pXfqZBGJGNm', // password: admin123
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS', // password: admin123
       name: 'Administrator',
       role: 'admin'
+    },
+    {
+      id: '2',
+      email: 'sjohnson@canya.com',
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS', // password: admin123
+      name: 'Sarah Johnson',
+      role: 'user'
+    },
+    {
+      id: '3',
+      email: 'mwilliams@canya.com',
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS', // password: admin123
+      name: 'Marcus Williams',
+      role: 'user'
+    },
+    {
+      id: '4',
+      email: 'erodriguez@canya.com',
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS', // password: admin123
+      name: 'Elena Rodriguez',
+      role: 'user'
     }
   ];
 
@@ -96,6 +117,7 @@ const initializeDataFiles = () => {
       id: '1',
       name: 'Sarah Johnson',
       role: 'Founder & Director',
+      group: 'Leadership',
       bio: 'Community advocate with 10+ years of experience in nonprofit work',
       image: 'https://via.placeholder.com/150'
     },
@@ -103,6 +125,7 @@ const initializeDataFiles = () => {
       id: '2',
       name: 'Marcus Williams',
       role: 'Operations Lead',
+      group: 'Operations',
       bio: 'Passionate about connecting communities with resources',
       image: 'https://via.placeholder.com/150'
     },
@@ -110,6 +133,7 @@ const initializeDataFiles = () => {
       id: '3',
       name: 'Elena Rodriguez',
       role: 'Partnerships Coordinator',
+      group: 'Partnerships',
       bio: 'Building bridges between service organizations and communities',
       image: 'https://via.placeholder.com/150'
     }
@@ -131,6 +155,124 @@ const initializeDataFiles = () => {
 };
 
 initializeDataFiles();
+
+const ensureDefaultUsersInDatabase = () => {
+  const usersPath = path.join(dataDir, 'users.json');
+  if (!fs.existsSync(usersPath)) {
+    return;
+  }
+
+  const defaultUsers = [
+    {
+      id: '1',
+      email: 'admin@canya.com',
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS',
+      name: 'Administrator',
+      role: 'admin'
+    },
+    {
+      id: '2',
+      email: 'sjohnson@canya.com',
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS',
+      name: 'Sarah Johnson',
+      role: 'user'
+    },
+    {
+      id: '3',
+      email: 'mwilliams@canya.com',
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS',
+      name: 'Marcus Williams',
+      role: 'user'
+    },
+    {
+      id: '4',
+      email: 'erodriguez@canya.com',
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS',
+      name: 'Elena Rodriguez',
+      role: 'user'
+    }
+  ];
+
+  let users = [];
+  try {
+    users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+  } catch (err) {
+    console.error('Unable to sync default users:', err);
+    return;
+  }
+
+  let usersUpdated = false;
+  for (const defaultUser of defaultUsers) {
+    const exists = users.some(user => user.email === defaultUser.email);
+    if (!exists) {
+      users.push(defaultUser);
+      usersUpdated = true;
+    }
+  }
+
+  if (usersUpdated) {
+    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+  }
+};
+
+ensureDefaultUsersInDatabase();
+
+const migrateMemberCredentialsToUsers = () => {
+  const usersPath = path.join(dataDir, 'users.json');
+  const membersPath = path.join(dataDir, 'members.json');
+
+  if (!fs.existsSync(usersPath) || !fs.existsSync(membersPath)) {
+    return;
+  }
+
+  let users = [];
+  let members = [];
+
+  try {
+    users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    members = JSON.parse(fs.readFileSync(membersPath, 'utf8'));
+  } catch (err) {
+    console.error('Unable to migrate member credentials:', err);
+    return;
+  }
+
+  let usersUpdated = false;
+  let membersUpdated = false;
+
+  members = members.map(member => {
+    if (member.email && member.password) {
+      const existingUser = users.find(u => u.email === member.email);
+      if (!existingUser) {
+        users.push({
+          id: member.id || crypto.randomUUID(),
+          email: member.email,
+          password: member.password,
+          name: member.name || member.email,
+          role: 'user'
+        });
+        usersUpdated = true;
+      }
+
+      const sanitizedMember = { ...member };
+      delete sanitizedMember.email;
+      delete sanitizedMember.password;
+      membersUpdated = true;
+      return sanitizedMember;
+    }
+
+    return member;
+  });
+
+  if (usersUpdated) {
+    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+  }
+
+  if (membersUpdated) {
+    fs.writeFileSync(membersPath, JSON.stringify(members, null, 2));
+  }
+};
+
+migrateMemberCredentialsToUsers();
 
 // Routes
 app.use('/api/auth', authRoutes.default || authRoutes);
@@ -223,6 +365,14 @@ app.get('/profile', (req, res) => {
 
 app.get('/launchdarkly', (req, res) => {
   res.sendFile(path.join(pagesDir, 'launchdarkly.html'));
+});
+
+app.get('/launchdarkly-embed', (req, res) => {
+  res.sendFile(path.join(pagesDir, 'launchdarkly-embed.html'));
+});
+
+app.get('/launchdarly-embed', (req, res) => {
+  res.sendFile(path.join(pagesDir, 'launchdarkly-embed.html'));
 });
 
 // 404 handler

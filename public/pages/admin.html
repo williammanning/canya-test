@@ -1,13 +1,115 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Canya</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
-    <script src="/js/theme.js"></script>
+    <script src="/js/auth-nav.js"></script>
     <style>
+        body {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        header {
+            background-color: #ffffff;
+            color: #000000;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .logo,
+        .nav-links a,
+        .theme-toggle {
+            color: #000000;
+        }
+
+        .theme-toggle {
+            border-color: #000000;
+        }
+
+        main,
+        .admin-container,
+        .admin-content,
+        .admin-sidebar,
+        .section,
+        .card,
+        .table,
+        .table thead,
+        .table tbody,
+        .table tr,
+        .table th,
+        .table td,
+        .modal-content,
+        .form-group label,
+        .form-group input,
+        .form-group select,
+        .form-group textarea,
+        .user-info p,
+        .user-info strong,
+        .section h2,
+        .section p,
+        .admin-sidebar h3 {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        .admin-sidebar {
+            border-color: #d1d5db;
+        }
+
+        .admin-content,
+        .modal-content,
+        .table,
+        .table th,
+        .table td,
+        .card {
+            border-color: #d1d5db;
+        }
+
+        .sidebar-nav button {
+            color: #000000;
+        }
+
+        .sidebar-nav button:hover {
+            background-color: #f3f4f6;
+            color: #000000;
+            border-left-color: #000000;
+        }
+
+        .sidebar-nav button.active {
+            background-color: #000000;
+            color: #ffffff;
+            border-left-color: #000000;
+        }
+
+        .close-modal {
+            color: #374151;
+        }
+
+        .ld-admin-frame {
+            width: 100%;
+            min-height: 900px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.75rem;
+            background-color: #ffffff;
+        }
+
+        #add-user-btn {
+            color: #000000;
+        }
+
+        #add-link-btn,
+        #add-service-btn {
+            color: #000000;
+        }
+
+        #users-table .action-buttons .btn,
+        #users-table .action-buttons .btn-danger {
+            color: #000000;
+        }
+
         .admin-container {
             display: grid;
             grid-template-columns: 250px 1fr;
@@ -218,8 +320,8 @@
             <a href="/" class="logo"><img src="/images/canya-logo.svg" alt="Canya logo" class="site-logo"></a>
             <ul class="nav-links">
                 <li><a href="/">Home</a></li>
-                <li><button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">☀️</button></li>
-                <li><a href="#" onclick="logout()" class="admin-link">Logout</a></li>
+                <li id="nav-user-name" style="display: none;"></li>
+                <li id="nav-auth-action"><a href="/login" class="admin-link">Login</a></li>
             </ul>
         </nav>
     </header>
@@ -234,6 +336,7 @@
                     <li><button class="nav-btn" data-section="users">👥 Users</button></li>
                     <li><button class="nav-btn" data-section="links">🔗 Links</button></li>
                     <li><button class="nav-btn" data-section="services">🎯 Services</button></li>
+                    <li><button class="nav-btn" data-section="launchdarkly-status">🚩 LaunchDarkly</button></li>
                     <li><button onclick="goToProfile()" style="margin-top: 1rem;">👤 My Profile</button></li>
                 </nav>
             </aside>
@@ -266,11 +369,12 @@
                 <section id="users" class="section">
                     <div class="section-header">
                         <h2>User Management</h2>
-                        <button class="btn" onclick="openUserModal()">➕ Add User</button>
+                        <button id="add-user-btn" class="btn" onclick="openUserModal()">➕ Add User</button>
                     </div>
                     <table class="table">
                         <thead>
                             <tr>
+                                <th>User ID</th>
                                 <th>Email</th>
                                 <th>Name</th>
                                 <th>Role</th>
@@ -285,7 +389,7 @@
                 <section id="links" class="section">
                     <div class="section-header">
                         <h2>Link Management</h2>
-                        <button class="btn" onclick="openLinkModal()">➕ Add Link</button>
+                        <button id="add-link-btn" class="btn" onclick="openLinkModal()">➕ Add Link</button>
                     </div>
                     <table class="table">
                         <thead>
@@ -304,7 +408,7 @@
                 <section id="services" class="section">
                     <div class="section-header">
                         <h2>Service Management</h2>
-                        <button class="btn" onclick="openServiceModal()">➕ Add Service</button>
+                        <button id="add-service-btn" class="btn" onclick="openServiceModal()">➕ Add Service</button>
                     </div>
                     <table class="table">
                         <thead>
@@ -317,6 +421,19 @@
                         </thead>
                         <tbody id="services-table"></tbody>
                     </table>
+                </section>
+
+                <!-- LaunchDarkly Section -->
+                <section id="launchdarkly-status" class="section">
+                    <div class="section-header">
+                        <h2>LaunchDarkly Status</h2>
+                    </div>
+                    <iframe
+                        class="ld-admin-frame"
+                        src="/launchdarkly-embed"
+                        title="LaunchDarkly Status"
+                        loading="lazy"
+                    ></iframe>
                 </section>
             </div>
         </div>

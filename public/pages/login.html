@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Canya Admin</title>
+    <title>Login - Canya</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
     <script src="/js/theme.js"></script>
+    <script src="/js/auth-nav.js"></script>
     <style>
         .login-container {
             max-width: 400px;
@@ -20,6 +21,10 @@
             text-align: center;
             margin-bottom: 2rem;
         }
+
+        #login-form .btn {
+            color: #000000;
+        }
     </style>
 </head>
 <body>
@@ -31,13 +36,15 @@
                 <li><a href="/services">Services</a></li>
                 <li><a href="/about">About Us</a></li>
                 <li><button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">☀️</button></li>
+                <li id="nav-user-name" style="display: none;"></li>
+                <li id="nav-auth-action"><a href="/login" class="admin-link">Login</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
         <div class="login-container">
-            <h1>Admin Login</h1>
+            <h1>User Login</h1>
             <div id="alert-container"></div>
             <form id="login-form">
                 <div class="form-group">
@@ -50,9 +57,6 @@
                 </div>
                 <button type="submit" class="btn btn-block">Login</button>
             </form>
-            <p style="text-align: center; margin-top: 1rem; color: var(--text-light);">
-                Demo: admin@canya.com / admin123
-            </p>
         </div>
     </main>
 
@@ -81,7 +85,8 @@
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
                 showAlert('Login successful! Redirecting...', 'success');
-                setTimeout(() => window.location.href = '/admin', 1500);
+                const redirectPath = data.user?.role === 'admin' ? '/admin' : '/profile';
+                setTimeout(() => window.location.href = redirectPath, 1500);
             } catch (err) {
                 showAlert('Error logging in. Please try again.', 'error');
                 console.error(err);
@@ -102,7 +107,8 @@
             .then(res => res.json())
             .then(data => {
                 if (data.valid) {
-                    window.location.href = '/admin';
+                    const redirectPath = data.user?.role === 'admin' ? '/admin' : '/profile';
+                    window.location.href = redirectPath;
                 }
             });
         }

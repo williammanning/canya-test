@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
     <script src="/js/theme.js"></script>
+    <script src="/js/auth-nav.js"></script>
     <script type="module" src="/js/ld.js"></script>
     <script type="module" src="/js/chatbot.js"></script>
 </head>
@@ -20,7 +21,8 @@
                 <li><a href="/services">Services</a></li>
                 <li><a href="/about">About Us</a></li>
                 <li><button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">☀️</button></li>
-                <li><a href="#" onclick="checkUserLogin()" class="admin-link">Account</a></li>
+                <li id="nav-user-name" style="display: none;"></li>
+                <li id="nav-auth-action"><a href="/login" class="admin-link">Login</a></li>
             </ul>
         </nav>
     </header>
@@ -120,16 +122,6 @@
     </footer>
 
     <script>
-        // Check if user is logged in
-        function checkUserLogin() {
-            const token = localStorage.getItem('token');
-            if (token) {
-                window.location.href = '/profile';
-            } else {
-                window.location.href = '/login';
-            }
-        }
-
         // Load featured links
         fetch('/api/public/links')
             .then(res => res.json())

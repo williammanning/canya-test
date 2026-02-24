@@ -1,35 +1,48 @@
 let currentEditingId = null;
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-  checkAuth();
+document.addEventListener('DOMContentLoaded', async () => {
+  const authorized = await checkAuth();
+  if (!authorized) {
+    return;
+  }
+
   setupEventListeners();
   loadDashboard();
 });
 
-function checkAuth() {
+async function checkAuth() {
   const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   if (!token) {
     window.location.href = '/login';
-    return;
+    return false;
   }
 
-  // Verify token
-  fetch('/api/auth/verify', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-  .then(res => res.json())
-  .then(data => {
+  try {
+    const response = await fetch('/api/auth/verify', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+
     if (!data.valid) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
+      return false;
+    } else if (data.user?.role !== 'admin') {
+      alert('Admin access required.');
+      window.location.href = '/profile';
+      return false;
     } else {
       displayUserInfo(data.user);
+      return true;
     }
-  });
+  } catch (error) {
+    console.error('Error verifying auth:', error);
+    window.location.href = '/login';
+    return false;
+  }
 }
 
 function displayUserInfo(user) {
@@ -105,13 +118,27 @@ async function loadDashboard() {
 async function loadUsers() {
   const token = localStorage.getItem('token');
   try {
-    const users = await fetch('/api/users', {
+    const response = await fetch('/api/users', {
       headers: { 'Authorization': `Bearer ${token}` }
-    }).then(r => r.json());
+    });
+
+    const users = await response.json();
 
     const tbody = document.getElementById('users-table');
+    if (!response.ok) {
+      const errorMessage = users?.error || 'Unable to load users.';
+      tbody.innerHTML = `<tr><td colspan="5">${errorMessage}</td></tr>`;
+      return;
+    }
+
+    if (!Array.isArray(users)) {
+      tbody.innerHTML = '<tr><td colspan="5">Unable to load users.</td></tr>';
+      return;
+    }
+
     tbody.innerHTML = users.map(user => `
       <tr>
+        <td>${user.id}</td>
         <td>${user.email}</td>
         <td>${user.name}</td>
         <td>${user.role}</td>

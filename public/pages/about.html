@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
     <script src="/js/theme.js"></script>
+    <script src="/js/auth-nav.js"></script>
 </head>
 <body>
     <header>
@@ -17,7 +18,8 @@
                 <li><a href="/services">Services</a></li>
                 <li><a href="/about">About Us</a></li>
                 <li><button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">☀️</button></li>
-                <li><a href="/login" class="admin-link">Admin Login</a></li>
+                <li id="nav-user-name" style="display: none;"></li>
+                <li id="nav-auth-action"><a href="/login" class="admin-link">Login</a></li>
             </ul>
         </nav>
     </header>

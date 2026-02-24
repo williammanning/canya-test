@@ -46,7 +46,10 @@ router.post('/users', verifyToken, (req, res) => {
 });
 
 router.put('/users/:id', verifyToken, (req, res) => {
-  if (req.user.role !== 'admin') {
+  const isAdmin = req.user.role === 'admin';
+  const isSelf = req.user.id === req.params.id;
+
+  if (!isAdmin && !isSelf) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
 
@@ -63,7 +66,7 @@ router.put('/users/:id', verifyToken, (req, res) => {
   if (email) users[userIndex].email = email;
   if (password) users[userIndex].password = bcrypt.hashSync(password, 10);
   if (name) users[userIndex].name = name;
-  if (role) users[userIndex].role = role;
+  if (isAdmin && role) users[userIndex].role = role;
 
   writeData('users.json', users);
   res.json({ id: users[userIndex].id, email: users[userIndex].email, name: users[userIndex].name, role: users[userIndex].role });

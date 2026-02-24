@@ -5,5 +5,26 @@
     "password": "$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS",
     "name": "Administrator",
     "role": "admin"
+  },
+  {
+    "id": "2",
+    "email": "sjohnson@canya.com",
+    "password": "$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS",
+    "name": "Sarah Johnson",
+    "role": "user"
+  },
+  {
+    "id": "3",
+    "email": "mwilliams@canya.com",
+    "password": "$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS",
+    "name": "Marcus Williams",
+    "role": "user"
+  },
+  {
+    "id": "4",
+    "email": "erodriguez@canya.com",
+    "password": "$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS",
+    "name": "Elena Rodriguez",
+    "role": "user"
   }
 ]

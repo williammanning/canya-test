@@ -29,7 +29,7 @@ router.post('/login', (req, res) => {
   res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
 });
 
-router.post('/verify', (req, res) => {
+const verifyTokenHandler = (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
@@ -42,6 +42,9 @@ router.post('/verify', (req, res) => {
   } catch (err) {
     res.status(401).json({ valid: false });
   }
-});
+};
+
+router.get('/verify', verifyTokenHandler);
+router.post('/verify', verifyTokenHandler);
 
 export default router;
