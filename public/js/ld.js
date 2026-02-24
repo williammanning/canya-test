@@ -3,34 +3,196 @@ import Observability from 'https://cdn.jsdelivr.net/npm/@launchdarkly/observabil
 import SessionReplay from 'https://cdn.jsdelivr.net/npm/@launchdarkly/session-replay@1.0.0/+esm';
 
 const clientSideID = '698a9d6da872e60a1a37c8fa';
-const context = {
+const fallbackContext = {
   kind: 'user',
   key: 'user123',
-  name: 'Test User'
+  name: 'Test User',
+  anonymous: true,
+  registeredUser: false
 };
 
-const ldclient = initialize(clientSideID, context, {
-  plugins: [
-    new Observability({
-      networkRecording: {
-        enabled: true,
-        recordHeadersAndBody: true
-      }
-    }),
-    new SessionReplay({
-      serviceName: 'ld-test'
-    })
-  ]
-});
+let ldclient;
+let pendingFlush = false;
+
+function safeFlush() {
+  if (!ldclient || pendingFlush) {
+    return;
+  }
+
+  pendingFlush = true;
+  setTimeout(() => {
+    try {
+      ldclient.flush();
+    } finally {
+      pendingFlush = false;
+    }
+  }, 500);
+}
+
+function normalizeText(value, maxLength = 120) {
+  if (!value) {
+    return '';
+  }
+
+  const text = String(value).replace(/\s+/g, ' ').trim();
+  return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+}
+
+function getCurrentUserMetadata(contextInfo) {
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  return {
+    userId: contextInfo?.key || storedUser.id || null,
+    email: contextInfo?.email || storedUser.email || null,
+    name: contextInfo?.name || storedUser.name || null,
+    role: contextInfo?.role || storedUser.role || null,
+    registeredUser: contextInfo?.registeredUser === true
+  };
+}
+
+function trackUserEvent(eventName, data = {}) {
+  if (!ldclient) {
+    return;
+  }
+
+  ldclient.track(eventName, {
+    ...data,
+    path: window.location.pathname,
+    timestamp: new Date().toISOString()
+  });
+
+  safeFlush();
+}
+
+function setupUserObservability(contextInfo) {
+  const userMetadata = getCurrentUserMetadata(contextInfo);
+
+  trackUserEvent('user-session-started', {
+    ...userMetadata,
+    referrer: document.referrer || null,
+    userAgent: navigator.userAgent
+  });
+
+  trackUserEvent('user-data-snapshot', userMetadata);
+
+  document.addEventListener('click', (event) => {
+    const target = event.target.closest('a, button, [role="button"], input[type="submit"]');
+    if (!target) {
+      return;
+    }
+
+    trackUserEvent('user-action-click', {
+      ...userMetadata,
+      tag: target.tagName,
+      id: target.id || null,
+      classes: target.className || null,
+      text: normalizeText(target.textContent || target.value),
+      href: target.getAttribute('href') || null
+    });
+  }, true);
+
+  document.addEventListener('submit', (event) => {
+    const form = event.target;
+    trackUserEvent('user-action-submit', {
+      ...userMetadata,
+      formId: form.id || null,
+      formAction: form.getAttribute('action') || null,
+      formMethod: form.getAttribute('method') || 'get'
+    });
+  }, true);
+
+  window.addEventListener('beforeunload', () => {
+    trackUserEvent('user-session-ended', userMetadata);
+  });
+
+  window.addEventListener('error', (event) => {
+    trackUserEvent('user-runtime-error', {
+      ...userMetadata,
+      message: normalizeText(event.message, 300),
+      source: event.filename || null,
+      line: event.lineno || null,
+      column: event.colno || null
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    trackUserEvent('user-unhandled-rejection', {
+      ...userMetadata,
+      reason: normalizeText(event.reason?.message || event.reason, 300)
+    });
+  });
+
+  window.trackUserAction = (action, details = {}) => {
+    trackUserEvent('user-action-custom', {
+      ...userMetadata,
+      action,
+      details
+    });
+  };
+}
+
+async function getLaunchDarklyContext() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return fallbackContext;
+  }
+
+  try {
+    const response = await fetch('/api/auth/verify', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      return fallbackContext;
+    }
+
+    const data = await response.json();
+    if (!data.valid || !data.user) {
+      return fallbackContext;
+    }
+
+    const user = data.user;
+    return {
+      kind: 'user',
+      key: user.id || user.email || user.name || 'authenticated-user',
+      name: user.name || 'Authenticated User',
+      email: user.email,
+      role: user.role,
+      anonymous: false,
+      registeredUser: true
+    };
+  } catch (error) {
+    console.error('Failed to resolve LaunchDarkly user context:', error);
+    return fallbackContext;
+  }
+}
 
 (async () => {
   try {
+    const context = await getLaunchDarklyContext();
+    ldclient = initialize(clientSideID, context, {
+      plugins: [
+        new Observability({
+          networkRecording: {
+            enabled: true,
+            recordHeadersAndBody: true
+          }
+        }),
+        new SessionReplay({
+          serviceName: 'ld-test'
+        })
+      ]
+    });
+
+    window.ldclient = ldclient;
+
     await ldclient.waitForInitialization(4000);
     console.log('SDK successfully initialized!');
     
     // Verify context is set correctly
     const contextInfo = ldclient.getContext();
     console.log('🔑 LaunchDarkly Context:', contextInfo);
+
+    setupUserObservability(contextInfo);
     
     // Evaluate feature flags
     evaluateFlags();
@@ -90,16 +252,13 @@ function evaluateFlags() {
   console.log('  Enabled:', aiConfig.enabled);
   
   // Track AI Config usage in LaunchDarkly
-  ldclient.track('ai-config-loaded', {
+  trackUserEvent('ai-config-loaded', {
     configKey: 'canya-chatbot-assistant',
     model: aiConfig.model,
     temperature: aiConfig.temperature,
     maxTokens: aiConfig.maxTokens,
     enabled: aiConfig.enabled
   });
-  
-  // Flush events to ensure LaunchDarkly receives them immediately
-  ldclient.flush();
   
   console.log('📊 LaunchDarkly tracking event sent: ai-config-loaded');
   console.log('💡 To see this data in LaunchDarkly:');
@@ -115,21 +274,22 @@ function evaluateFlags() {
     console.log('🔄 Chatbot AI config updated:', newConfig);
     
     // Track config changes
-    ldclient.track('ai-config-changed', {
+    trackUserEvent('ai-config-changed', {
       configKey: 'canya-chatbot-assistant',
       newModel: newConfig.model,
       newTemperature: newConfig.temperature,
       newMaxTokens: newConfig.maxTokens
     });
-    ldclient.flush();
   });
 }
 
-// Export the client for use in other scripts if needed
-window.ldclient = ldclient;
-
 // Expose test function to verify AI config in console
 window.testLDAIConfig = function() {
+  if (!ldclient) {
+    console.log('LaunchDarkly client not initialized yet. Please try again in a moment.');
+    return;
+  }
+
   console.log('🧪 Testing LaunchDarkly AI Config Connection...');
   console.log('');
   console.log('Current AI Config:', window.chatbotAIConfig);
@@ -143,11 +303,10 @@ window.testLDAIConfig = function() {
   console.log('');
   
   // Send test event
-  ldclient.track('test-ai-config-connection', {
+  trackUserEvent('test-ai-config-connection', {
     timestamp: new Date().toISOString(),
     testPassed: !!testConfig
   });
-  ldclient.flush();
   
   console.log('✅ Test event sent to LaunchDarkly');
   console.log('📊 Check your LaunchDarkly dashboard in a few moments');
