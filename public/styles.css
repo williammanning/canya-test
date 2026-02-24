@@ -401,6 +401,13 @@ h3 {
   transform: translateY(0);
 }
 
+.home-view-services-btn,
+.home-send-message-btn,
+.home-view-services-btn:hover,
+.home-send-message-btn:hover {
+  color: #000000;
+}
+
 .btn-secondary {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
@@ -430,6 +437,24 @@ h3 {
   border-color: rgba(0, 0, 0, 0.3);
   color: var(--text);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] main .btn,
+[data-theme="light"] main .btn-secondary,
+[data-theme="light"] main .btn-danger {
+  background: #d9d9d9;
+  border-color: #b8b8b8;
+  color: #000000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] main .btn:hover,
+[data-theme="light"] main .btn-secondary:hover,
+[data-theme="light"] main .btn-danger:hover {
+  background: #c8c8c8;
+  border-color: #a8a8a8;
+  color: #000000;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 .btn-danger {
@@ -878,6 +903,10 @@ footer {
 #chat-send {
   padding: 0.75rem 1.5rem;
   white-space: nowrap;
+  color: #ffffff;
+}
+
+[data-theme="light"] #chat-send {
   color: #000000;
 }
 
