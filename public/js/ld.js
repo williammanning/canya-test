@@ -11,6 +11,14 @@ const fallbackContext = {
   registeredUser: false
 };
 
+const DEFAULT_CHATBOT_AI_CONFIG = {
+  enabled: true,
+  model: 'gemini-3-flash-preview',
+  temperature: 0.7,
+  maxTokens: 1024,
+  systemPrompt: 'You are a helpful assistant for Canya, a community services and resources platform. Help users with questions about community services, environmental conservation, social justice, and community development.'
+};
+
 let ldclient;
 let pendingFlush = false;
 
@@ -130,6 +138,28 @@ function setupUserObservability(contextInfo) {
   };
 }
 
+function resolveChatbotAIConfig(flagValue) {
+  if (!flagValue || typeof flagValue !== 'object') {
+    return { ...DEFAULT_CHATBOT_AI_CONFIG };
+  }
+
+  const merged = {
+    ...DEFAULT_CHATBOT_AI_CONFIG,
+    ...flagValue
+  };
+
+  const temperature = Number(merged.temperature);
+  const maxTokens = Number(merged.maxTokens);
+
+  return {
+    enabled: typeof merged.enabled === 'boolean' ? merged.enabled : DEFAULT_CHATBOT_AI_CONFIG.enabled,
+    model: merged.model || DEFAULT_CHATBOT_AI_CONFIG.model,
+    temperature: Number.isFinite(temperature) ? temperature : DEFAULT_CHATBOT_AI_CONFIG.temperature,
+    maxTokens: Number.isFinite(maxTokens) ? maxTokens : DEFAULT_CHATBOT_AI_CONFIG.maxTokens,
+    systemPrompt: merged.systemPrompt || DEFAULT_CHATBOT_AI_CONFIG.systemPrompt
+  };
+}
+
 async function getLaunchDarklyContext() {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -233,13 +263,8 @@ function evaluateFlags() {
   });
 
   // Get AI Config for chatbot
-  const aiConfig = ldclient.variation('canya-chatbot-assistant', {
-    enabled: true,
-    model: 'gemini-3-flash-preview',
-    temperature: 0.7,
-    maxTokens: 1024,
-    systemPrompt: 'You are a helpful assistant for Canya, a community services and resources platform. Help users with questions about community services, environmental conservation, social justice, and community development.'
-  });
+  const rawAiConfig = ldclient.variation('canya-chatbot-assistant', DEFAULT_CHATBOT_AI_CONFIG);
+  const aiConfig = resolveChatbotAIConfig(rawAiConfig);
   
   // Store AI config globally for chatbot to use
   window.chatbotAIConfig = aiConfig;
@@ -270,15 +295,17 @@ function evaluateFlags() {
   
   // Listen for AI config changes
   ldclient.on('change:canya-chatbot-assistant', (newConfig) => {
-    window.chatbotAIConfig = newConfig;
-    console.log('🔄 Chatbot AI config updated:', newConfig);
+    const normalizedConfig = resolveChatbotAIConfig(newConfig);
+    window.chatbotAIConfig = normalizedConfig;
+    console.log('🔄 Chatbot AI config updated:', normalizedConfig);
     
     // Track config changes
     trackUserEvent('ai-config-changed', {
       configKey: 'canya-chatbot-assistant',
-      newModel: newConfig.model,
-      newTemperature: newConfig.temperature,
-      newMaxTokens: newConfig.maxTokens
+      newModel: normalizedConfig.model,
+      newTemperature: normalizedConfig.temperature,
+      newMaxTokens: normalizedConfig.maxTokens,
+      enabled: normalizedConfig.enabled
     });
   });
 }

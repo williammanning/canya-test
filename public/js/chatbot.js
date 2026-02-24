@@ -66,6 +66,10 @@ async function handleSendMessage() {
 async function sendToServer(userMessage) {
   // Get AI config from LaunchDarkly (set by ld.js)
   const aiConfig = window.chatbotAIConfig || null;
+
+  if (aiConfig && aiConfig.enabled === false) {
+    return 'The AI assistant is currently disabled by configuration. Please try again later.';
+  }
   
   // Test: Log AI config being sent
   console.log('📤 Sending message to server with AI config:', aiConfig);
