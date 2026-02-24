@@ -131,8 +131,11 @@ nav {
   color: var(--text-light);
   margin: 0;
   flex: 1;
-  margin-left: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1rem;
   max-width: 420px;
+  text-align: center;
   white-space: normal;
   overflow-wrap: anywhere;
   opacity: 0.9;
@@ -625,7 +628,8 @@ footer {
   .header-tagline {
     font-size: 0.72rem;
     max-width: 260px;
-    margin-left: 0.75rem;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .nav-links {
