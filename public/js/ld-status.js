@@ -5,7 +5,7 @@ import SessionReplay from 'https://cdn.jsdelivr.net/npm/@launchdarkly/session-re
 const clientSideID = '698a9d6da872e60a1a37c8fa';
 const context = {
   kind: 'user',
-  key: 'user123',
+  key: 'nonuser',
   name: 'Test User'
 };
 
