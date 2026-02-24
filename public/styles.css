@@ -818,6 +818,27 @@ footer {
   line-height: 1.5;
 }
 
+.message-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.message-body p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.message-body ul,
+.message-body ol {
+  margin: 0;
+  padding-left: 1.35rem;
+}
+
+.message-body li {
+  margin: 0.2rem 0;
+}
+
 .chat-input-container {
   display: flex;
   gap: 0.5rem;
@@ -853,6 +874,7 @@ footer {
 #chat-send {
   padding: 0.75rem 1.5rem;
   white-space: nowrap;
+  color: #000000;
 }
 
 @media (max-width: 768px) {

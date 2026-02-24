@@ -124,17 +124,74 @@ function addMessage(role, content) {
   const messageDiv = document.createElement('div');
   messageDiv.id = messageId;
   messageDiv.className = `chat-message ${role}`;
-  messageDiv.innerHTML = `
-    <div class="message-content">
-      <strong>${role === 'user' ? 'You' : 'AI Assistant'}:</strong>
-      <p>${content}</p>
-    </div>
-  `;
+  const messageContent = document.createElement('div');
+  messageContent.className = 'message-content';
+
+  const label = document.createElement('strong');
+  label.textContent = role === 'user' ? 'You:' : 'AI Assistant:';
+  messageContent.appendChild(label);
+
+  const messageBody = document.createElement('div');
+  messageBody.className = 'message-body';
+
+  if (role === 'assistant') {
+    appendFormattedAssistantContent(messageBody, content);
+  } else {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = content;
+    messageBody.appendChild(paragraph);
+  }
+
+  messageContent.appendChild(messageBody);
+  messageDiv.appendChild(messageContent);
   
   chatMessages.appendChild(messageDiv);
   chatMessages.scrollTop = chatMessages.scrollHeight;
   
   return messageId;
+}
+
+function appendFormattedAssistantContent(container, content) {
+  const lines = String(content || '').replace(/\r/g, '').split('\n');
+  let index = 0;
+
+  while (index < lines.length) {
+    const currentLine = lines[index].trim();
+
+    if (!currentLine) {
+      index += 1;
+      continue;
+    }
+
+    if (/^[-*•]\s+/.test(currentLine)) {
+      const bulletList = document.createElement('ul');
+      while (index < lines.length && /^[-*•]\s+/.test(lines[index].trim())) {
+        const item = document.createElement('li');
+        item.textContent = lines[index].trim().replace(/^[-*•]\s+/, '');
+        bulletList.appendChild(item);
+        index += 1;
+      }
+      container.appendChild(bulletList);
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(currentLine)) {
+      const numberedList = document.createElement('ol');
+      while (index < lines.length && /^\d+\.\s+/.test(lines[index].trim())) {
+        const item = document.createElement('li');
+        item.textContent = lines[index].trim().replace(/^\d+\.\s+/, '');
+        numberedList.appendChild(item);
+        index += 1;
+      }
+      container.appendChild(numberedList);
+      continue;
+    }
+
+    const paragraph = document.createElement('p');
+    paragraph.textContent = lines[index].trim();
+    container.appendChild(paragraph);
+    index += 1;
+  }
 }
 
 function removeMessage(messageId) {
