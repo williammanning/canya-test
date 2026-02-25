@@ -21,6 +21,7 @@ const DEFAULT_CHATBOT_AI_CONFIG = {
 
 let ldclient;
 let pendingFlush = false;
+let aiclient;
 
 function safeFlush() {
   if (!ldclient || pendingFlush) {
@@ -35,6 +36,32 @@ function safeFlush() {
       pendingFlush = false;
     }
   }, 500);
+}
+
+function createFallbackLDAIClient(client) {
+  return {
+    trackChatPrompt(payload = {}) {
+      if (!client) {
+        return;
+      }
+      client.track('ai-chatbot-prompt', payload);
+      safeFlush();
+    },
+    trackChatResponse(payload = {}) {
+      if (!client) {
+        return;
+      }
+      client.track('ai-chatbot-response', payload);
+      safeFlush();
+    },
+    trackChatError(payload = {}) {
+      if (!client) {
+        return;
+      }
+      client.track('ai-chatbot-error', payload);
+      safeFlush();
+    }
+  };
 }
 
 function normalizeText(value, maxLength = 120) {
@@ -215,6 +242,24 @@ async function getLaunchDarklyContext() {
 
     window.ldclient = ldclient;
 
+    const ldClientForAI = typeof ldclient.get === 'function' ? ldclient.get() : ldclient;
+    if (typeof window.LDAIClient === 'function') {
+      try {
+        aiclient = window.LDAIClient(ldClientForAI);
+        console.log('✅ LaunchDarkly AI client initialized via LDAIClient');
+      } catch (error) {
+        console.warn('⚠️ LDAIClient initialization failed, using fallback AI tracker', error);
+      }
+    }
+
+    if (!aiclient) {
+      aiclient = createFallbackLDAIClient(ldclient);
+      console.log('ℹ️ Using fallback LaunchDarkly AI tracking client');
+    }
+
+    window.aiclient = aiclient;
+    window.ldAIClient = aiclient;
+
     await ldclient.waitForInitialization(4000);
     console.log('SDK successfully initialized!');
     
@@ -262,15 +307,15 @@ function evaluateFlags() {
     }
   });
 
-  // Get AI Config for chatbot
-  const rawAiConfig = ldclient.variation('canya-chatbot-assistant', DEFAULT_CHATBOT_AI_CONFIG);
-  const aiConfig = resolveChatbotAIConfig(rawAiConfig);
+  // Initialize chatbot config locally; server endpoint resolves LaunchDarkly AI config source of truth
+  const aiConfig = resolveChatbotAIConfig(window.chatbotAIConfig || DEFAULT_CHATBOT_AI_CONFIG);
   
   // Store AI config globally for chatbot to use
   window.chatbotAIConfig = aiConfig;
+  window.dispatchEvent(new CustomEvent('chatbot-ai-config-updated', { detail: aiConfig }));
   
   // Test AI Config connection
-  console.log('✅ LaunchDarkly AI Config (canya-chatbot-assistant) loaded:', aiConfig);
+  console.log('✅ Chatbot AI config initialized on client:', aiConfig);
   console.log('  Model:', aiConfig.model);
   console.log('  Temperature:', aiConfig.temperature);
   console.log('  Max Tokens:', aiConfig.maxTokens);
@@ -278,7 +323,7 @@ function evaluateFlags() {
   
   // Track AI Config usage in LaunchDarkly
   trackUserEvent('ai-config-loaded', {
-    configKey: 'canya-chatbot-assistant',
+    configKey: 'server-resolved',
     model: aiConfig.model,
     temperature: aiConfig.temperature,
     maxTokens: aiConfig.maxTokens,
@@ -290,28 +335,12 @@ function evaluateFlags() {
   console.log('   1. Go to your LaunchDarkly dashboard');
   console.log('   2. Navigate to Experimentation > Events or Insights');
   console.log('   3. Look for custom events: "ai-config-loaded", "chatbot-message-sent"');
-  console.log('   4. Check Flag evaluations for "canya-chatbot-assistant"');
+  console.log('   4. Check /api/chatbot/config response for LaunchDarkly AI config source');
   console.log('   5. Ensure your project has the correct client-side ID:', clientSideID);
-  
-  // Listen for AI config changes
-  ldclient.on('change:canya-chatbot-assistant', (newConfig) => {
-    const normalizedConfig = resolveChatbotAIConfig(newConfig);
-    window.chatbotAIConfig = normalizedConfig;
-    console.log('🔄 Chatbot AI config updated:', normalizedConfig);
-    
-    // Track config changes
-    trackUserEvent('ai-config-changed', {
-      configKey: 'canya-chatbot-assistant',
-      newModel: normalizedConfig.model,
-      newTemperature: normalizedConfig.temperature,
-      newMaxTokens: normalizedConfig.maxTokens,
-      enabled: normalizedConfig.enabled
-    });
-  });
 }
 
 // Expose test function to verify AI config in console
-window.testLDAIConfig = function() {
+window.testLDAIConfig = async function() {
   if (!ldclient) {
     console.log('LaunchDarkly client not initialized yet. Please try again in a moment.');
     return;
@@ -324,9 +353,10 @@ window.testLDAIConfig = function() {
   console.log('LaunchDarkly Context:', ldclient.getContext());
   console.log('');
   
-  // Get the variation with details
-  const testConfig = ldclient.variation('canya-chatbot-assistant', {});
-  console.log('Fresh AI Config fetch:', testConfig);
+  // Get the server-resolved config with details
+  const response = await fetch('/api/chatbot/config', { method: 'GET' });
+  const testConfig = response.ok ? await response.json() : { error: `HTTP ${response.status}` };
+  console.log('Server-resolved AI Config fetch:', testConfig);
   console.log('');
   
   // Send test event
@@ -338,7 +368,7 @@ window.testLDAIConfig = function() {
   console.log('✅ Test event sent to LaunchDarkly');
   console.log('📊 Check your LaunchDarkly dashboard in a few moments');
   console.log('   Expected events: "test-ai-config-connection", "ai-config-loaded"');
-  console.log('   Expected flag: "canya-chatbot-assistant"');
+  console.log('   Expected source: LaunchDarkly AI SDK via /api/chatbot/config');
 };
 
 console.log('💡 Run testLDAIConfig() in console to verify LaunchDarkly AI Config');

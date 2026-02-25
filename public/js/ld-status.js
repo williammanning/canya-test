@@ -3,11 +3,53 @@ import Observability from 'https://cdn.jsdelivr.net/npm/@launchdarkly/observabil
 import SessionReplay from 'https://cdn.jsdelivr.net/npm/@launchdarkly/session-replay@1.0.0/+esm';
 
 const clientSideID = '698a9d6da872e60a1a37c8fa';
-const context = {
+const fallbackContext = {
   kind: 'user',
-  key: 'nonuser',
-  name: 'Test User'
+  key: 'anonymous-status-user',
+  name: 'Anonymous User',
+  anonymous: true,
+  registeredUser: false
 };
+
+let currentContext = fallbackContext;
+
+async function getLaunchDarklyContext() {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return fallbackContext;
+  }
+
+  try {
+    const response = await fetch('/api/auth/verify', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      return fallbackContext;
+    }
+
+    const data = await response.json();
+    if (!data.valid || !data.user) {
+      return fallbackContext;
+    }
+
+    const user = data.user;
+    return {
+      kind: 'user',
+      key: user.id || user.email || user.name || 'authenticated-status-user',
+      name: user.name || 'Authenticated User',
+      email: user.email,
+      role: user.role,
+      anonymous: false,
+      registeredUser: true
+    };
+  } catch (error) {
+    console.warn('Failed to resolve logged-in user context for LaunchDarkly status page:', error);
+    return fallbackContext;
+  }
+}
 
 // Known feature flags in the application
 const KNOWN_FLAGS = [
@@ -32,7 +74,9 @@ async function initializeLaunchDarkly() {
   updateConnectionStatus('connecting', 'Connecting...');
   
   try {
-    ldclient = initialize(clientSideID, context, {
+    currentContext = await getLaunchDarklyContext();
+
+    ldclient = initialize(clientSideID, currentContext, {
       plugins: [
         new Observability({
           networkRecording: {
@@ -67,7 +111,7 @@ async function initializeLaunchDarkly() {
     // Track page view event
     trackEvent('ld-status-page-view', {
       timestamp: new Date().toISOString(),
-      userKey: context.key
+      userKey: currentContext.key
     });
     
     console.log('✅ LaunchDarkly Status Page: Successfully initialized');
@@ -112,25 +156,149 @@ function updateSDKInfo() {
 async function loadAIConfigs() {
   const aiContainer = document.getElementById('ai-configs-container');
   aiContainer.innerHTML = '';
-  
+
+  let renderedCount = 0;
+
+  // Primary source of truth: server-resolved AI config using LaunchDarkly AI SDK
+  try {
+    const response = await fetch('/api/chatbot/config', {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const serverCard = createAIConfigStatusCard(data);
+      serverCard.classList.add('ai-config-card');
+      aiContainer.appendChild(serverCard);
+      renderedCount += 1;
+    }
+  } catch (error) {
+    console.warn('Unable to load server-resolved AI config for status page:', error);
+  }
+
+  // Supplemental source: any AI config-like values exposed to client-side SDK
   const allFlags = ldclient.allFlags();
   const aiConfigKeys = AI_CONFIG_FLAGS.filter(key => allFlags[key] !== undefined);
-  
-  if (aiConfigKeys.length === 0) {
-    aiContainer.innerHTML = '<div class="no-flags">No AI configurations found</div>';
-    document.getElementById('ai-count').textContent = '0';
-    return;
-  }
-  
+
   aiConfigKeys.forEach(flagKey => {
     const flagValue = allFlags[flagKey];
     const flagCard = createFlagCard(flagKey, flagValue);
     flagCard.classList.add('ai-config-card');
     aiContainer.appendChild(flagCard);
+    renderedCount += 1;
   });
-  
-  document.getElementById('ai-count').textContent = aiConfigKeys.length;
-  console.log(`🤖 Loaded ${aiConfigKeys.length} AI configurations`);
+
+  if (renderedCount === 0) {
+    aiContainer.innerHTML = '<div class="no-flags">No AI configurations found</div>';
+  }
+
+  document.getElementById('ai-count').textContent = String(renderedCount);
+  console.log(`🤖 Loaded ${renderedCount} AI configuration entries`);
+}
+
+function createAIConfigStatusCard(serverData) {
+  const card = document.createElement('div');
+  card.className = 'flag-card';
+
+  const source = serverData?.configSource || 'unknown';
+  const checkedKey = serverData?.checkedAIConfigKey || '(not set)';
+  const applied = serverData?.appliedAIConfig || {};
+  const sdkResolution = serverData?.sdkResolution || {};
+  const reason = getAIConfigReason(source, sdkResolution);
+  const reasonClass = getAIConfigReasonClass(source);
+
+  const safeValue = {
+    checkedKey,
+    source,
+    reason,
+    appliedAIConfig: {
+      model: applied.model || 'default',
+      temperature: applied.temperature ?? 0.7,
+      maxTokens: applied.maxTokens ?? 1024,
+      enabled: applied.enabled !== false
+    },
+    sdkResolution: {
+      requestedKey: sdkResolution.requestedKey || null,
+      trackerAvailable: sdkResolution.trackerAvailable === true,
+      trackerHasData: sdkResolution.trackerHasData === true,
+      returnedConfigKey: sdkResolution.returnedConfigKey || null,
+      variationKey: sdkResolution.variationKey || null,
+      version: typeof sdkResolution.version === 'number' ? sdkResolution.version : null,
+      modelName: sdkResolution.modelName || null,
+      providerName: sdkResolution.providerName || null,
+      messageCount: Number.isFinite(Number(sdkResolution.messageCount)) ? Number(sdkResolution.messageCount) : 0,
+      hasSystemMessage: sdkResolution.hasSystemMessage === true
+    }
+  };
+
+  const sourcePillStyle = getAIConfigSourcePillStyle(source);
+
+  card.innerHTML = `
+    <div class="flag-header">
+      <div class="flag-key">server-ai-config</div>
+      <div class="flag-value json" style="${sourcePillStyle}">${source}</div>
+    </div>
+    <div class="flag-details">
+      <div class="ai-config-reason ${reasonClass}">${reason}</div>
+      <div class="flag-type">Type: Server AI Config Status</div>
+      <details class="flag-json-details">
+        <summary>View raw config JSON</summary>
+        <pre class="flag-json">${JSON.stringify(safeValue, null, 2)}</pre>
+      </details>
+    </div>
+  `;
+
+  return card;
+}
+
+function getAIConfigReason(source, sdkResolution) {
+  if (source === 'launchdarkly-ai-sdk') {
+    return 'AI SDK resolved an active variation for this context';
+  }
+
+  if (source === 'ai-config-key-not-set') {
+    return 'AI config key is not set in server environment';
+  }
+
+  if (source === 'ai-config-key-not-found') {
+    if (sdkResolution?.returnedConfigKey && !sdkResolution?.variationKey) {
+      return 'Key matched but no variation is targeting this user context';
+    }
+    return 'Configured AI config key is not visible in this LaunchDarkly environment';
+  }
+
+  if (source === 'ai-config-no-tracker') {
+    return 'AI config returned without tracker metadata; using fallback-safe interpretation';
+  }
+
+  return 'Using fallback AI settings due to unresolved AI config state';
+}
+
+function getAIConfigReasonClass(source) {
+  if (source === 'launchdarkly-ai-sdk') {
+    return 'reason-success';
+  }
+
+  if (source === 'ai-config-key-not-found' || source === 'ai-config-key-not-set') {
+    return 'reason-error';
+  }
+
+  return 'reason-warning';
+}
+
+function getAIConfigSourcePillStyle(source) {
+  if (source === 'launchdarkly-ai-sdk') {
+    return 'background:#d4edda;color:#155724;border:1px solid #b8dfc3;';
+  }
+
+  if (source === 'ai-config-key-not-found' || source === 'ai-config-key-not-set') {
+    return 'background:#f8d7da;color:#721c24;border:1px solid #f1b5bb;';
+  }
+
+  return 'background:#fff3cd;color:#856404;border:1px solid #ffe8a1;';
 }
 
 // Load and display all feature flags

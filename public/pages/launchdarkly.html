@@ -190,6 +190,50 @@
             color: var(--text);
         }
 
+        .ai-config-reason {
+            margin-bottom: 10px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .ai-config-reason.reason-success {
+            background: #d4edda;
+            color: #155724;
+            border-color: #b8dfc3;
+        }
+
+        .ai-config-reason.reason-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffe8a1;
+        }
+
+        .ai-config-reason.reason-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f1b5bb;
+        }
+
+        .flag-json-details {
+            margin-top: 4px;
+        }
+
+        .flag-json-details summary {
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            user-select: none;
+        }
+
+        .flag-json-details[open] summary {
+            color: var(--text);
+        }
+
         .no-flags {
             text-align: center;
             padding: 48px;

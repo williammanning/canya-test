@@ -10,6 +10,7 @@ import apiRoutes from './routes/api.js';
 import publicRoutes from './routes/public.js';
 import dotenv from 'dotenv';
 import * as LaunchDarkly from '@launchdarkly/node-server-sdk';
+import { initAi } from '@launchdarkly/server-sdk-ai';
 
 
 dotenv.config();
@@ -25,7 +26,8 @@ client.once('ready', function () {
 
 client.on('initialized', () => {
   // initialization succeeded, flag values are now available
-  const flagValue = client.variation('featured-links-frame', true);
+  client.variation('featured-links-frame', { kind: 'user', key: 'server-startup' }, true)
+    .catch(() => null);
   // etc.
 });
 
@@ -36,6 +38,25 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 const FEATURED_LINKS_FLAG_KEY = 'featured-links-frame';
+const CHATBOT_AI_CONFIG_KEY = (process.env.LAUNCHDARKLY_CHATBOT_AI_CONFIG_KEY || '').trim();
+
+console.log(`LaunchDarkly chatbot AI config key: ${CHATBOT_AI_CONFIG_KEY || '(not set)'}`);
+
+let ldAiClient = null;
+try {
+  ldAiClient = initAi(client);
+  console.log('LaunchDarkly server AI SDK initialized');
+} catch (error) {
+  console.warn('LaunchDarkly server AI SDK unavailable, falling back to existing chatbot config flow', error?.message || error);
+}
+
+app.locals.ldClient = client;
+app.locals.ldAiClient = ldAiClient;
+app.locals.ldAIConfigKey = CHATBOT_AI_CONFIG_KEY;
+
+if (!CHATBOT_AI_CONFIG_KEY) {
+  console.log('LaunchDarkly chatbot AI config key is not set; using fallback chatbot config');
+}
 
 // Middleware
 app.use(bodyParser.json());
