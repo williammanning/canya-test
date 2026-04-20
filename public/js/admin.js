@@ -1,5 +1,7 @@
 let currentEditingId = null;
 
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
   const authorized = await checkAuth();
@@ -48,9 +50,9 @@ async function checkAuth() {
 function displayUserInfo(user) {
   const userInfo = document.getElementById('user-info');
   userInfo.innerHTML = `
-    <p><strong>${user.name}</strong></p>
-    <p>${user.email}</p>
-    <p>Role: ${user.role}</p>
+    <p><strong>${esc(user.name)}</strong></p>
+    <p>${esc(user.email)}</p>
+    <p>Role: ${esc(user.role)}</p>
   `;
 }
 
@@ -100,15 +102,21 @@ async function loadDashboard() {
   const token = localStorage.getItem('token');
 
   try {
-    const [users, links, services] = await Promise.all([
-      fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-      fetch('/api/links', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-      fetch('/api/services', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+    const [usersRes, linksRes, servicesRes] = await Promise.all([
+      fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } }),
+      fetch('/api/links', { headers: { 'Authorization': `Bearer ${token}` } }),
+      fetch('/api/services', { headers: { 'Authorization': `Bearer ${token}` } })
     ]);
 
-    document.getElementById('user-count').textContent = users.length;
-    document.getElementById('link-count').textContent = links.length;
-    document.getElementById('service-count').textContent = services.length;
+    const [users, links, services] = await Promise.all([
+      usersRes.ok ? usersRes.json() : [],
+      linksRes.ok ? linksRes.json() : [],
+      servicesRes.ok ? servicesRes.json() : []
+    ]);
+
+    document.getElementById('user-count').textContent = Array.isArray(users) ? users.length : 0;
+    document.getElementById('link-count').textContent = Array.isArray(links) ? links.length : 0;
+    document.getElementById('service-count').textContent = Array.isArray(services) ? services.length : 0;
   } catch (err) {
     console.error('Error loading dashboard:', err);
   }
@@ -127,7 +135,7 @@ async function loadUsers() {
     const tbody = document.getElementById('users-table');
     if (!response.ok) {
       const errorMessage = users?.error || 'Unable to load users.';
-      tbody.innerHTML = `<tr><td colspan="5">${errorMessage}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5">${esc(errorMessage)}</td></tr>`;
       return;
     }
 
@@ -138,14 +146,14 @@ async function loadUsers() {
 
     tbody.innerHTML = users.map(user => `
       <tr>
-        <td>${user.id}</td>
-        <td>${user.email}</td>
-        <td>${user.name}</td>
-        <td>${user.role}</td>
+        <td>${esc(user.id)}</td>
+        <td>${esc(user.email)}</td>
+        <td>${esc(user.name)}</td>
+        <td>${esc(user.role)}</td>
         <td>
           <div class="action-buttons">
-            <button class="btn btn-small" onclick="editUser('${user.id}', '${user.email}', '${user.name}', '${user.role}')">Edit</button>
-            <button class="btn btn-small btn-danger" onclick="deleteUser('${user.id}')">Delete</button>
+            <button class="btn btn-small" onclick="editUser(${esc(JSON.stringify(user.id))}, ${esc(JSON.stringify(user.email))}, ${esc(JSON.stringify(user.name))}, ${esc(JSON.stringify(user.role))})">Edit</button>
+            <button class="btn btn-small btn-danger" onclick="deleteUser(${esc(JSON.stringify(user.id))})">Delete</button>
           </div>
         </td>
       </tr>
@@ -245,20 +253,32 @@ async function deleteUser(id) {
 async function loadLinks() {
   const token = localStorage.getItem('token');
   try {
-    const links = await fetch('/api/links', {
+    const response = await fetch('/api/links', {
       headers: { 'Authorization': `Bearer ${token}` }
-    }).then(r => r.json());
+    });
 
     const tbody = document.getElementById('links-table');
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      tbody.innerHTML = `<tr><td colspan="4">${esc(data?.error || 'Unable to load links.')}</td></tr>`;
+      return;
+    }
+
+    const links = await response.json();
+    if (!Array.isArray(links)) {
+      tbody.innerHTML = '<tr><td colspan="4">Unable to load links.</td></tr>';
+      return;
+    }
+
     tbody.innerHTML = links.map(link => `
       <tr>
-        <td>${link.name}</td>
-        <td><a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.url}</a></td>
-        <td>${link.description}</td>
+        <td>${esc(link.name)}</td>
+        <td><a href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${esc(link.url)}</a></td>
+        <td>${esc(link.description)}</td>
         <td>
           <div class="action-buttons">
-            <button class="btn btn-small" onclick="editLink('${link.id}', '${link.name.replace(/'/g, "\\'")}', '${link.url}', '${link.description.replace(/'/g, "\\'")}')">Edit</button>
-            <button class="btn btn-small btn-danger" onclick="deleteLink('${link.id}')">Delete</button>
+            <button class="btn btn-small" onclick="editLink(${esc(JSON.stringify(link.id))}, ${esc(JSON.stringify(link.name))}, ${esc(JSON.stringify(link.url))}, ${esc(JSON.stringify(link.description))})">Edit</button>
+            <button class="btn btn-small btn-danger" onclick="deleteLink(${esc(JSON.stringify(link.id))})">Delete</button>
           </div>
         </td>
       </tr>
@@ -351,20 +371,32 @@ async function deleteLink(id) {
 async function loadServices() {
   const token = localStorage.getItem('token');
   try {
-    const services = await fetch('/api/services', {
+    const response = await fetch('/api/services', {
       headers: { 'Authorization': `Bearer ${token}` }
-    }).then(r => r.json());
+    });
 
     const tbody = document.getElementById('services-table');
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      tbody.innerHTML = `<tr><td colspan="4">${esc(data?.error || 'Unable to load services.')}</td></tr>`;
+      return;
+    }
+
+    const services = await response.json();
+    if (!Array.isArray(services)) {
+      tbody.innerHTML = '<tr><td colspan="4">Unable to load services.</td></tr>';
+      return;
+    }
+
     tbody.innerHTML = services.map(service => `
       <tr>
-        <td>${service.icon}</td>
-        <td>${service.name}</td>
-        <td>${service.description}</td>
+        <td>${esc(service.icon)}</td>
+        <td>${esc(service.name)}</td>
+        <td>${esc(service.description)}</td>
         <td>
           <div class="action-buttons">
-            <button class="btn btn-small" onclick="editService('${service.id}', '${service.name.replace(/'/g, "\\'")}', '${service.description.replace(/'/g, "\\'")}', '${service.icon}')">Edit</button>
-            <button class="btn btn-small btn-danger" onclick="deleteService('${service.id}')">Delete</button>
+            <button class="btn btn-small" onclick="editService(${esc(JSON.stringify(service.id))}, ${esc(JSON.stringify(service.name))}, ${esc(JSON.stringify(service.description))}, ${esc(JSON.stringify(service.icon))})">Edit</button>
+            <button class="btn btn-small btn-danger" onclick="deleteService(${esc(JSON.stringify(service.id))})">Delete</button>
           </div>
         </td>
       </tr>

@@ -74,7 +74,12 @@ function normalizeText(value, maxLength = 120) {
 }
 
 function getCurrentUserMetadata(contextInfo) {
-  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  let storedUser = {};
+  try {
+    storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    storedUser = {};
+  }
   return {
     userId: contextInfo?.key || storedUser.id || null,
     email: contextInfo?.email || storedUser.email || null,
@@ -278,7 +283,7 @@ async function getLaunchDarklyContext() {
 
 function evaluateFlags() {
   // Check featured-resources flag
-  const featuredResourcesEnabled = ldclient.variation('featured-resources', false);
+  const featuredResourcesEnabled = ldclient.variation('featured-links-frame', false);
   const featuredSection = document.querySelector('[data-ld-flag-key="featured-links-frame"]');
   
   if (featuredSection) {
@@ -286,7 +291,7 @@ function evaluateFlags() {
   }
   
   // Listen for flag changes
-  ldclient.on('change:featured-resources', (newValue) => {
+  ldclient.on('change:featured-links-frame', (newValue) => {
     if (featuredSection) {
       featuredSection.style.display = newValue ? 'block' : 'none';
     }

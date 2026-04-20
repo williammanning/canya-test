@@ -14,6 +14,11 @@ import { initAi } from '@launchdarkly/server-sdk-ai';
 
 
 dotenv.config();
+
+if (!process.env.LAUNCHDARKLY_SDK_KEY) {
+  console.warn('LAUNCHDARKLY_SDK_KEY is not set; LaunchDarkly features will be unavailable');
+}
+
 const client = LaunchDarkly.init(process.env.LAUNCHDARKLY_SDK_KEY);
 
 client.once('ready', function () {
@@ -29,6 +34,10 @@ client.on('initialized', () => {
   client.variation('featured-links-frame', { kind: 'user', key: 'server-startup' }, true)
     .catch(() => null);
   // etc.
+});
+
+client.on('failed', (err) => {
+  console.error('LaunchDarkly SDK failed to initialize:', err);
 });
 
 
@@ -58,6 +67,15 @@ if (!CHATBOT_AI_CONFIG_KEY) {
   console.log('LaunchDarkly chatbot AI config key is not set; using fallback chatbot config');
 }
 
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -76,28 +94,28 @@ const initializeDataFiles = () => {
     {
       id: '1',
       email: 'admin@canya.com',
-      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS', // password: admin123
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS',
       name: 'Administrator',
       role: 'admin'
     },
     {
       id: '2',
       email: 'sjohnson@canya.com',
-      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS', // password: admin123
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS',
       name: 'Sarah Johnson',
       role: 'user'
     },
     {
       id: '3',
       email: 'mwilliams@canya.com',
-      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS', // password: admin123
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS',
       name: 'Marcus Williams',
       role: 'user'
     },
     {
       id: '4',
       email: 'erodriguez@canya.com',
-      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS', // password: admin123
+      password: '$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS',
       name: 'Elena Rodriguez',
       role: 'user'
     }
@@ -170,7 +188,11 @@ const initializeDataFiles = () => {
   files.forEach(file => {
     const filePath = path.join(dataDir, file.name);
     if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify(file.data, null, 2));
+      try {
+        fs.writeFileSync(filePath, JSON.stringify(file.data, null, 2));
+      } catch (err) {
+        console.error(`Error initializing ${file.name}:`, err);
+      }
     }
   });
 };
@@ -232,7 +254,11 @@ const ensureDefaultUsersInDatabase = () => {
   }
 
   if (usersUpdated) {
-    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+    try {
+      fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+    } catch (err) {
+      console.error('Error saving default users:', err);
+    }
   }
 };
 
@@ -285,11 +311,19 @@ const migrateMemberCredentialsToUsers = () => {
   });
 
   if (usersUpdated) {
-    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+    try {
+      fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+    } catch (err) {
+      console.error('Error saving migrated users:', err);
+    }
   }
 
   if (membersUpdated) {
-    fs.writeFileSync(membersPath, JSON.stringify(members, null, 2));
+    try {
+      fs.writeFileSync(membersPath, JSON.stringify(members, null, 2));
+    } catch (err) {
+      console.error('Error saving migrated members:', err);
+    }
   }
 };
 
@@ -392,9 +426,6 @@ app.get('/launchdarkly-embed', (req, res) => {
   res.sendFile(path.join(pagesDir, 'launchdarkly-embed.html'));
 });
 
-app.get('/launchdarly-embed', (req, res) => {
-  res.sendFile(path.join(pagesDir, 'launchdarkly-embed.html'));
-});
 
 // 404 handler
 app.use((req, res) => {

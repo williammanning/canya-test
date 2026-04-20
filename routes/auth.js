@@ -4,7 +4,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { readData } from '../middleware/db.js';
 
-const SECRET_KEY = process.env.SECRET_KEY || 'canya_secret_key_2024';
+const SECRET_KEY = process.env.SECRET_KEY;
+if (!SECRET_KEY) throw new Error('SECRET_KEY environment variable is required');
 
 router.post('/login', (req, res) => {
   const { email, password } = req.body;

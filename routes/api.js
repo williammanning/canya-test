@@ -284,6 +284,15 @@ router.get('/links', verifyToken, (req, res) => {
   res.json(links);
 });
 
+const validateUrl = (url) => {
+  try {
+    const parsed = new URL(url);
+    return ['http:', 'https:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
 router.post('/links', verifyToken, (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Unauthorized' });
@@ -293,6 +302,10 @@ router.post('/links', verifyToken, (req, res) => {
 
   if (!name || !url) {
     return res.status(400).json({ error: 'Name and URL required' });
+  }
+
+  if (!validateUrl(url)) {
+    return res.status(400).json({ error: 'URL must use http or https' });
   }
 
   const links = readData('links.json');
@@ -325,7 +338,12 @@ router.put('/links/:id', verifyToken, (req, res) => {
   }
 
   if (name) links[linkIndex].name = name;
-  if (url) links[linkIndex].url = url;
+  if (url) {
+    if (!validateUrl(url)) {
+      return res.status(400).json({ error: 'URL must use http or https' });
+    }
+    links[linkIndex].url = url;
+  }
   if (description !== undefined) links[linkIndex].description = description;
 
   writeData('links.json', links);
