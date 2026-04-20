@@ -26,5 +26,12 @@
     "password": "$2a$10$2ZBeAkiYGhn8RKQAUpSc1.2MpiOdhJxau.hBhJcT3IjdAxO9pcvQS",
     "name": "Elena Rodriguez",
     "role": "user"
+  },
+  {
+    "id": "a08d0230-1dce-4685-a7e0-35a92f756d8e",
+    "email": "test@canya.com",
+    "password": "$2a$10$cPAl9EUVzmzC2xc8zE.qY.3kGpIqG4ThwoLlBtQ1RXliHJZ3GkAwm",
+    "name": "Test User",
+    "role": "user"
   }
 ]

@@ -6,7 +6,6 @@
     <title>Admin Dashboard - Canya</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
-    <script type="module" src="/js/ld.js"></script>
     <script src="/js/auth-nav.js"></script>
     <style>
         body {
@@ -87,14 +86,6 @@
 
         .close-modal {
             color: #374151;
-        }
-
-        .ld-admin-frame {
-            width: 100%;
-            min-height: 900px;
-            border: 1px solid #d1d5db;
-            border-radius: 0.75rem;
-            background-color: #ffffff;
         }
 
         #add-user-btn {
@@ -337,7 +328,6 @@
                     <li><button class="nav-btn" data-section="users">👥 Users</button></li>
                     <li><button class="nav-btn" data-section="links">🔗 Links</button></li>
                     <li><button class="nav-btn" data-section="services">🎯 Services</button></li>
-                    <li><button class="nav-btn" data-section="launchdarkly-status">🚩 LaunchDarkly</button></li>
                     <li><button onclick="goToProfile()" style="margin-top: 1rem;">👤 My Profile</button></li>
                 </nav>
             </aside>
@@ -424,18 +414,6 @@
                     </table>
                 </section>
 
-                <!-- LaunchDarkly Section -->
-                <section id="launchdarkly-status" class="section">
-                    <div class="section-header">
-                        <h2>LaunchDarkly Status</h2>
-                    </div>
-                    <iframe
-                        class="ld-admin-frame"
-                        src="/launchdarkly-embed"
-                        title="LaunchDarkly Status"
-                        loading="lazy"
-                    ></iframe>
-                </section>
             </div>
         </div>
     </main>
