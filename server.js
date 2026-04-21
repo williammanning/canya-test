@@ -324,5 +324,5 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`Canya server is running on http://localhost:${PORT}`);
-  console.log(`Admin login: admin@canya.com / admin123`);
+  console.log(`Admin account: admin@canya.com`);
 });

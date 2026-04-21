@@ -15,7 +15,11 @@
 
     if (userNameItem) {
       userNameItem.style.display = 'list-item';
-      userNameItem.innerHTML = `<a href="/profile" class="nav-user-name">${user.name}</a>`;
+      const link = document.createElement('a');
+      link.href = '/profile';
+      link.className = 'nav-user-name';
+      link.textContent = user.name;
+      userNameItem.replaceChildren(link);
     }
 
     if (authActionItem) {

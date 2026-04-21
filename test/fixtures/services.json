@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1",
+    "name": "Environmental Conservation",
+    "description": "Organizations working to protect our planet and natural resources",
+    "icon": "🌍"
+  },
+  {
+    "id": "2",
+    "name": "Social Justice",
+    "description": "Movements dedicated to creating a more equitable society",
+    "icon": "✊"
+  }
+]

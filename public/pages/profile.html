@@ -345,7 +345,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ password: newPassword })
+                    body: JSON.stringify({ password: newPassword, currentPassword })
                 });
 
                 if (response.ok) {

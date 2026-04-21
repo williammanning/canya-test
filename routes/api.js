@@ -62,13 +62,22 @@ router.put('/users/:id', verifyToken, (req, res) => {
   }
 
   const { id } = req.params;
-  const { email, password, name, role } = req.body;
+  const { email, password, currentPassword, name, role } = req.body;
 
   let users = readData('users.json');
   const userIndex = users.findIndex(u => u.id === id);
 
   if (userIndex === -1) {
     return res.status(404).json({ error: 'User not found' });
+  }
+
+  if (password && !isAdmin) {
+    if (!currentPassword) {
+      return res.status(400).json({ error: 'Current password is required to change password' });
+    }
+    if (!bcrypt.compareSync(currentPassword, users[userIndex].password)) {
+      return res.status(403).json({ error: 'Current password is incorrect' });
+    }
   }
 
   if (email) users[userIndex].email = email;
